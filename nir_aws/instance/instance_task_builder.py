@@ -30,5 +30,8 @@ def build(sqs_queue_data):
     Returns:
         list: list of task objects consumable by
             :py:func:`nir_aws.instance.instance_task.run_tasks`
+
+            Example Return Value::
+
     """
     return []

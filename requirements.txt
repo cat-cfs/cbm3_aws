@@ -1,2 +1,2 @@
 boto3
-cbm3_python
+cbm3_python>=0.6.4

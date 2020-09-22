@@ -1,5 +1,8 @@
-import unittest, os, shutil, glob
-from cbm3_aws.s3interface import S3Interface
+import unittest
+import os
+import shutil
+import glob
+from cbm3_aws.s3_interface import S3Interface
 
 
 class MockS3Resource(object):
@@ -37,7 +40,7 @@ class S3Interface_Test(unittest.TestCase):
         s = S3Interface(m, "b", os.path.join(os.getcwd(), "temp"))
         self.assertIsInstance(s.bucket, MockS3Bucket)
         self.assertEqual(s.bucket.name, "b")
-        self.assertEqual(s.localTempDir, os.path.join(os.getcwd(), "temp"))
+        self.assertEqual(s.local_temp_dir, os.path.join(os.getcwd(), "temp"))
 
     def test_downloadFileCallsBucketMethod(self):
         m = MockS3Resource()
@@ -48,7 +51,7 @@ class S3Interface_Test(unittest.TestCase):
             self.assertEqual(localPath, "path")
             self.assertEqual(keyName, "key")
         s.bucket.bind_download_file_method(func)
-        s.downloadFile("key", "path")
+        s.download_file("key", "path")
 
     def test_uploadFileCallsBucketMethod(self):
         m = MockS3Resource()
@@ -59,7 +62,7 @@ class S3Interface_Test(unittest.TestCase):
             self.assertEqual(localPath, "path")
             self.assertEqual(keyName, "key")
         s.bucket.bind_upload_file_method(func)
-        s.uploadFile("path", "key")
+        s.upload_file("path", "key")
 
     def test_archive_and_extract_file(self):
         tempPath = os.path.join(os.getcwd(), "tests", "temp")
@@ -76,8 +79,9 @@ class S3Interface_Test(unittest.TestCase):
             fn = os.path.join(compressPath, "tempfile")
             with open(fn, 'w') as f:
                 f.write("testfile contents")
-            name = s.archiveFileOrDirectory(fn, "tempfile")
-            s.unpackFileOrDirectory(name, os.path.join(extractPath, "tempfile"))
+            name = s.archive_file_or_directory(fn, "tempfile")
+            s.unpack_file_or_directory(
+                name, os.path.join(extractPath, "tempfile"))
             with open(os.path.join(extractPath, "tempfile"), 'r') as f:
                 self.assertEqual(f.read(), "testfile contents")
         finally:
@@ -106,8 +110,8 @@ class S3Interface_Test(unittest.TestCase):
                 with open(os.path.join(subdir, "subdir_tempfile{0}".format(i)), 'w') as f:
                     f.write("subdir testfile contents {0}".format(i))
 
-            name = s.archiveFileOrDirectory(compressPath, "tempfile")
-            s.unpackFileOrDirectory(name, extractPath)
+            name = s.archive_file_or_directory(compressPath, "tempfile")
+            s.unpack_file_or_directory(name, extractPath)
             for i in range(1, 10):
                 with open(os.path.join(extractPath, "tempfile{0}".format(i)), 'r') as f:
                     self.assertEqual(f.read(), "testfile contents {0}".format(i))
@@ -141,7 +145,7 @@ class S3Interface_Test(unittest.TestCase):
             with open(os.path.join(compressPath, "tempfile"), 'w') as f:
                 f.write("testfile contents")
 
-            s.uploadCompressed(
+            s.upload_compressed(
                 "keyPrefix", "docName", os.path.join(compressPath, "tempfile"))
         finally:
             shutil.rmtree(tempPath)
@@ -170,7 +174,7 @@ class S3Interface_Test(unittest.TestCase):
                 with open(os.path.join(compressPath, "tempfile{0}".format(i)), 'w') as f:
                     f.write("testfile contents {0}".format(i))
 
-            s.uploadCompressed("keyPrefix", "docName", compressPath)
+            s.upload_compressed("keyPrefix", "docName", compressPath)
         finally:
             shutil.rmtree(tempPath)
 
@@ -194,8 +198,8 @@ class S3Interface_Test(unittest.TestCase):
             fn = os.path.join(compressPath, "tempfile")
             with open(fn, 'w') as f:
                 f.write("testfile contents")
-            name = s.archiveFileOrDirectory(fn, "docpath_docName")
-            s.downloadCompressed(
+            s.archive_file_or_directory(fn, "docpath_docName")
+            s.download_compressed(
                 "keyPrefix", "docpath/docName",
                 os.path.join(extractPath, "tempfile"))
             path = os.path.join(extractPath, "tempfile")
@@ -226,8 +230,8 @@ class S3Interface_Test(unittest.TestCase):
             for i in range(1, 10):
                 with open(os.path.join(compressPath, "tempfile{0}".format(i)), 'w') as f:
                     f.write("testfile contents {0}".format(i))
-            name = s.archiveFileOrDirectory(compressPath, "docpath_docName")
-            s.downloadCompressed("keyPrefix", "docpath/docName", extractPath)
+            s.archive_file_or_directory(compressPath, "docpath_docName")
+            s.download_compressed("keyPrefix", "docpath/docName", extractPath)
             for i in range(1, 10):
                 with open(os.path.join(extractPath, "tempfile{0}".format(i)), 'r') as f:
                     self.assertEqual(

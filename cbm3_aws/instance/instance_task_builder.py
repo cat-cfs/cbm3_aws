@@ -30,8 +30,7 @@ def build(instance_message, instance_resources_dir):
                          "s3_key": "uc2021/projects/BCB",
                          "simulation_ids": [21, 22]},
                     ]
-                }
-                instance_resources_dir="/resources/")
+                })
 
     Returns:
         dict: dictionary containing instance-local resource paths and a list of
@@ -64,9 +63,9 @@ def build(instance_message, instance_resources_dir):
                         {"project_name": "AB",
                          "simulation_id": 2},
                         {"project_name": "BCB",
-                         "simulation_id": 2},
+                         "simulation_id": 21},
                         {"project_name": "BCB",
-                         "simulation_id": 2}
+                         "simulation_id": 22}
                     ]
                 }
 

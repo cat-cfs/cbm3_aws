@@ -14,15 +14,15 @@ console_scripts = [
 ]
 
 setup(
-    name="nir_aws",
+    name="cbm3_aws",
     version="0.1.0",
-    description="Scripts for Deploying NIR uncertainty analysis on AWS",
+    description="Scripts for running CBM3 simulations on AWS",
     keywords=["cbm-cfs3", "AWS"],
     long_description=long_description,
     long_description_content_type='text/markdown',
     url="",
     download_url="",
-    packages=find_packages(),
+    packages=find_packages(exclude=['test*']),
     entry_points={
         "console_scripts": console_scripts
     },

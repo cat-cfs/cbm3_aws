@@ -1,6 +1,6 @@
-# nir_aws
+# cbm3_aws
 
-Scripts and commands for deploying and running NIR Uncertainty analysis on AWS
+Scripts and commands for deploying and running CBM3 simulations on AWS
 
 ## Instance Requirements
 
@@ -14,5 +14,5 @@ Scripts and commands for deploying and running NIR Uncertainty analysis on AWS
 The scripts can be directly installed from github
 
 ```bash
-pip install git+https://github.com/smorken/nir_aws.git
+pip install git+https://github.com/smorken/cbm3_aws.git
 ```

@@ -10,7 +10,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 console_scripts = [
-    "nir_aws_instance = nir_aws.scripts.run_instance:main"
+    "cbm3_aws_instance = cbm3_aws.scripts.run_instance:main"
 ]
 
 setup(

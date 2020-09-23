@@ -82,7 +82,7 @@ def _start_execution(client, name, arn_context, task_list):
         input=json.dumps(task_list))
 
 
-def run(client, role_arn, task_list, mask_task_concurrency):
+def run(client, role_arn, max_task_concurrency, task_list):
     """Start step functions to run concurrent CBM3 tasks
 
     Args:
@@ -90,13 +90,31 @@ def run(client, role_arn, task_list, mask_task_concurrency):
         role_arn (string): The Amazon Resource Name (ARN) of the IAM role to
             use for the state machines created by this function.
         task_list (list): the list of CBM3 tasks to run
-        mask_task_concurrency (int): the maximum number of instances to run
+        max_task_concurrency (int): the maximum number of workers to run
             concurrently.
+
+    Example::
+
+        run(
+            client=boto3.client('stepfunctions'),
+            role_arn='roleArn',
+            max_task_concurrency=2,
+            task_list=[
+                [
+                    {"project_code": "AB", "simulation_ids": [1, 2]},
+                    {"project_code": "BCB", "simulation_ids": [21, 22]}
+                ],
+                [
+                    {"project_code": "AB", "simulation_ids": [3, 4]},
+                    {"project_code": "BCB", "simulation_ids": [23, 24]}
+                ]
+            ]
+        )
     """
     # import boto3
     # client = boto3.client('stepfunctions')
     execution_name = ""
     task_list = []
     with _create_state_machines(client, role_arn,
-                                mask_task_concurrency) as arn_context:
+                                max_task_concurrency) as arn_context:
         _start_execution(client, execution_name, arn_context, task_list)

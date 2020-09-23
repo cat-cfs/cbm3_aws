@@ -10,7 +10,7 @@ from cbm3_aws.local import cbm3_run_state_machine
 def _create_worker_activity(client, activity_task_name):
     response = client.create_activity(
         name=constants.CBM_RUN_ACTIVITY_NAME)
-    return response["actvivityArn"]
+    return response["activityArn"]
 
 
 def _create_task_state_machine(client, worker_activity_resource_arn, role_arn):
@@ -83,7 +83,16 @@ def _start_execution(client, name, arn_context, task_list):
 
 
 def run(client, role_arn, task_list, mask_task_concurrency):
+    """Start step functions to run concurrent CBM3 tasks
 
+    Args:
+        client (SFN.client): boto3 step functions client
+        role_arn (string): The Amazon Resource Name (ARN) of the IAM role to
+            use for the state machines created by this function.
+        task_list (list): the list of CBM3 tasks to run
+        mask_task_concurrency (int): the maximum number of instances to run
+            concurrently.
+    """
     # import boto3
     # client = boto3.client('stepfunctions')
     execution_name = ""

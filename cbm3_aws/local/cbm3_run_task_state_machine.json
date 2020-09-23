@@ -1,0 +1,6 @@
+{
+    "Comment": "Task to launch CBM runs and retry if they experience a spot interruption",
+    "StartAt": "map_tasks",
+    "States": {
+    }
+}

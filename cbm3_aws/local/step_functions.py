@@ -61,12 +61,7 @@ def _create_state_machines(client, activity_task_name, role_arn,
 
 
 def _cleanup(client, arn_context):
-    """[summary]
 
-    Args:
-        client ([type]): [description]
-        arn_context ([type]): [description]
-    """
     client.delete_state_machine(
         stateMachineArn=arn_context.app_state_machine_arn)
     client.delete_state_machine(
@@ -83,14 +78,16 @@ def _start_execution(client, name, arn_context, task_list):
 
 
 @contextmanager
-def run(client, role_arn, execution_name, max_task_concurrency, task_list):
+def run(client, role_arn, execution_name, max_task_concurrency, tasks):
     """Start step functions to run concurrent CBM3 tasks
 
     Args:
         client (SFN.client): boto3 step functions client
         role_arn (string): The Amazon Resource Name (ARN) of the IAM role to
             use for the state machines created by this function.
-        task_list (list): the list of CBM3 tasks to run
+        execution_name (string): The name of the execution. This name must be
+            unique for your AWS account, region, and state machine for 90 days.
+        tasks (dict): the CBM3 tasks to run
         max_task_concurrency (int): the maximum number of workers to run
             concurrently.
 
@@ -100,16 +97,18 @@ def run(client, role_arn, execution_name, max_task_concurrency, task_list):
             client=boto3.client('stepfunctions'),
             role_arn='roleArn',
             max_task_concurrency=2,
-            task_list=[
-                [
-                    {"project_code": "AB", "simulation_ids": [1, 2]},
-                    {"project_code": "BCB", "simulation_ids": [21, 22]}
-                ],
-                [
-                    {"project_code": "AB", "simulation_ids": [3, 4]},
-                    {"project_code": "BCB", "simulation_ids": [23, 24]}
+            tasks = {
+                "task_list": [
+                    [
+                        {"project_code": "AB", "simulation_ids": [1, 2]},
+                        {"project_code": "BCB", "simulation_ids": [21, 22]}
+                    ],
+                    [
+                        {"project_code": "AB", "simulation_ids": [3, 4]},
+                        {"project_code": "BCB", "simulation_ids": [23, 24]}
+                    ]
                 ]
-            ]
+            }
         )
 
     Yields:
@@ -117,7 +116,7 @@ def run(client, role_arn, execution_name, max_task_concurrency, task_list):
     """
     arn_context = _create_state_machines(
         client, role_arn, max_task_concurrency)
-    _start_execution(client, execution_name, arn_context, task_list)
+    _start_execution(client, execution_name, arn_context, tasks)
     try:
         yield arn_context
     finally:

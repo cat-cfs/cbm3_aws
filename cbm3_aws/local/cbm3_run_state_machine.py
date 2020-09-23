@@ -8,8 +8,7 @@ def get_state_machine(task_state_machine_arn, max_concurrency):
         "States": {
             "map_tasks": {
                 "Type": "Map",
-                "InputPath": "$.jobs",
-                "ItemsPath": "$.jobs",
+                "ItemsPath": "$.task_list",
                 "MaxConcurrency": max_concurrency,
                 "Iterator": {
                     "StartAt": "launch_cbm_task",

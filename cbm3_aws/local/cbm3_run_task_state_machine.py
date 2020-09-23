@@ -1,6 +1,8 @@
+import json
 
-def get_state_machine(cbm_run_task_activity_name):
-    return {
+
+def get_state_machine(cbm_run_task_activity_arn):
+    return json.dumps({
         "Comment": "Task to launch CBM runs and retry if they experience a "
                    "spot interruption",
         "StartAt": "RunCBMTask",
@@ -8,7 +10,7 @@ def get_state_machine(cbm_run_task_activity_name):
             "RunCBMTask": {
                 "Comment": "starts the CBM run task activity",
                 "Type": "activity",
-                "Resource": cbm_run_task_activity_name,
+                "Resource": cbm_run_task_activity_arn,
                 "HeartbeatSeconds": 60,
                 "Retry": [
                     {
@@ -27,4 +29,4 @@ def get_state_machine(cbm_run_task_activity_name):
                 "Next": "RunCBMTask"
             }
         }
-    }
+    })

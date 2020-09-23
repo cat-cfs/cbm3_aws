@@ -102,21 +102,27 @@ class S3Interface_Test(unittest.TestCase):
         try:
             for i in range(1, 10):
                 # add files to the zip root dir
-                with open(os.path.join(compressPath, "tempfile{0}".format(i)), 'w') as f:
+                with open(os.path.join(compressPath,
+                                       "tempfile{0}".format(i)), 'w') as f:
                     f.write("testfile contents {0}".format(i))
                 # now add some subdirectories and files
                 subdir = os.path.join(compressPath, str(i))
                 os.makedirs(subdir)
-                with open(os.path.join(subdir, "subdir_tempfile{0}".format(i)), 'w') as f:
+                with open(os.path.join(
+                                subdir,
+                                "subdir_tempfile{0}".format(i)), 'w') as f:
                     f.write("subdir testfile contents {0}".format(i))
 
             name = s.archive_file_or_directory(compressPath, "tempfile")
             s.unpack_file_or_directory(name, extractPath)
             for i in range(1, 10):
-                with open(os.path.join(extractPath, "tempfile{0}".format(i)), 'r') as f:
-                    self.assertEqual(f.read(), "testfile contents {0}".format(i))
+                with open(os.path.join(extractPath,
+                                       "tempfile{0}".format(i)), 'r') as f:
+                    self.assertEqual(
+                        f.read(), "testfile contents {0}".format(i))
                 subdir = os.path.join(extractPath, str(i))
-                with open(os.path.join(subdir, "subdir_tempfile{0}".format(i)), 'r') as f:
+                with open(os.path.join(
+                        subdir, "subdir_tempfile{0}".format(i)), 'r') as f:
                     self.assertEqual(
                         f.read(), "subdir testfile contents {0}".format(i))
         finally:
@@ -171,7 +177,8 @@ class S3Interface_Test(unittest.TestCase):
             s.bucket.bind_upload_file_method(func)
 
             for i in range(1, 10):
-                with open(os.path.join(compressPath, "tempfile{0}".format(i)), 'w') as f:
+                with open(os.path.join(compressPath,
+                                       "tempfile{0}".format(i)), 'w') as f:
                     f.write("testfile contents {0}".format(i))
 
             s.upload_compressed("keyPrefix", "docName", compressPath)
@@ -228,12 +235,14 @@ class S3Interface_Test(unittest.TestCase):
             s.bucket.bind_download_file_method(func)
 
             for i in range(1, 10):
-                with open(os.path.join(compressPath, "tempfile{0}".format(i)), 'w') as f:
+                with open(os.path.join(compressPath,
+                                       "tempfile{0}".format(i)), 'w') as f:
                     f.write("testfile contents {0}".format(i))
             s.archive_file_or_directory(compressPath, "docpath_docName")
             s.download_compressed("keyPrefix", "docpath/docName", extractPath)
             for i in range(1, 10):
-                with open(os.path.join(extractPath, "tempfile{0}".format(i)), 'r') as f:
+                with open(os.path.join(extractPath,
+                                       "tempfile{0}".format(i)), 'r') as f:
                     self.assertEqual(
                         f.read(), "testfile contents {0}".format(i))
         finally:

@@ -29,12 +29,13 @@ def run(activity_arn, s3_bucket_name):
     get_activity_task_response = client.get_activity_task(
         activityArn=activity_arn)
 
-    task_token = get_activity_task_response["taskToken"]
-    heart_beat_process = Process(
-        target=heartbeat, args=(task_token,))
-    heart_beat_process.start()
-
     try:
+
+        task_token = get_activity_task_response["taskToken"]
+        heart_beat_process = Process(
+            target=heartbeat, args=(task_token,))
+        heart_beat_process.start()
+
         with tempfile.TemporaryDirectory() as temp_dir:
             s3_working_dir = os.path.join(temp_dir, "s3_working")
             os.makedirs(s3_working_dir)

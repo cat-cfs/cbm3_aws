@@ -98,7 +98,7 @@ def start_execution(client, name, arn_context, task_list):
         input=json.dumps(task_list))
 
 
-def run_app(client, role_arn, task_list):
+def run(client, role_arn, task_list):
     # import boto3
     # client = boto3.client('stepfunctions')
     activity_task_name = constants.CBM_RUN_ACTIVITY_NAME

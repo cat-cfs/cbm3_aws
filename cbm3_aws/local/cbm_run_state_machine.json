@@ -12,8 +12,8 @@
             "States": {
                 "launch_cbm_task": {
                     "Type": "Task",
-                    "Resource": "{{launch_cbm_task_resource_arn}}",
-                    "End": "True"
+                    "Resource": "{{task_state_machine_arn}}",
+                    "End": true
                 }
             }
         },

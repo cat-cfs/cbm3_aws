@@ -1,18 +1,9 @@
 import boto3
 import os
+from types import SimpleNamespace
 import json
 
 client = boto3.client('stepfunctions')
-
-response = client.create_activity(
-    name='cbm3_run_task'
-    # tags=[
-    #    {
-    #        'key': 'string',
-    #        'value': 'string'
-    #    },
-    # ]
-)
 
 
 def get_local_dir():
@@ -24,19 +15,35 @@ def get_local_dir():
 
 
 def load_state_machine_definition(path, **template_kwargs):
+    # TODO: implement templating
     with open(path, 'r') as fp:
         # do a load/dump round trip to catch json syntax problems
         return json.load(fp)
 
 
-def create_state_machines(role_arn, cloud_watch_logs_group_arn):
+def create_worker_activity(activity_task_name):
+    response = client.create_activity(
+        name=activity_task_name
+        # tags=[
+        #    {
+        #        'key': 'string',
+        #        'value': 'string'
+        #    },
+        # ]
+        )
+    return response["actvivityArn"]
 
-    cbm3_run_task_state_machine_definition = load_state_machine_definition(
-        os.path.join(get_local_dir(), "cbm_run_state_machine.json"))
 
-    cbm3_run_task_state_machine_response = client.create_state_machine(
+def create_task_state_machine(worker_activity_resource_arn, role_arn,
+                              cloud_watch_logs_group_arn):
+
+    state_machine_definition = load_state_machine_definition(
+        os.path.join(get_local_dir(), "cbm_run_state_machine.json"),
+        worker_activity_resource_arn=worker_activity_resource_arn)
+
+    response = client.create_state_machine(
         name='cbm3_run_task_state_machine',
-        definition=cbm3_run_task_state_machine_definition,
+        definition=state_machine_definition,
         roleArn=role_arn,
         type='STANDARD',
         loggingConfiguration={
@@ -61,16 +68,21 @@ def create_state_machines(role_arn, cloud_watch_logs_group_arn):
         # }
     )
 
+    return response["stateMachineArn"]
+
+
+def create_application_state_machine(task_state_machine_arn, role_arn,
+                                     cloud_watch_logs_group_arn):
     # TODO: template the cbm_run_state_machine defintion with the value of
     # cbm3_run_task_state_machine_response["stateMachineArn"]
 
-    cbm3_run_state_machine_definition = load_state_machine_definition(
+    state_machine_definition = load_state_machine_definition(
         os.path.join(get_local_dir(), "cbm_run_state_machine.json"),
-        cbm3_run_task_state_machine_response["stateMachineArn"])
+        task_state_machine_arn=task_state_machine_arn)
 
-    response = client.create_state_machine(
+    cbm3_run_state_machine_response = client.create_state_machine(
         name='cbm3_run_state_machine',
-        definition=cbm3_run_state_machine_definition,
+        definition=state_machine_definition,
         roleArn=role_arn,
         type='STANDARD',
         loggingConfiguration={
@@ -95,5 +107,27 @@ def create_state_machines(role_arn, cloud_watch_logs_group_arn):
         # }
     )
 
-def create_worker_activity():
+    return cbm3_run_state_machine_response["stateMachineArn"]
+
+
+def create_state_machines(role_arn, cloud_watch_logs_group_arn):
+
+    activity_arn = create_worker_activity(
+        activity_task_name="cbm_run_task_activity")
+    task_state_machine_arn = create_task_state_machine(
+        worker_activity_resource_arn=activity_arn,
+        role_arn=role_arn,
+        cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
+    app_state_machine_arn = create_application_state_machine(
+        task_state_machine_arn=task_state_machine_arn,
+        role_arn=role_arn,
+        cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
+    return SimpleNamespace(
+        activity_arn=activity_arn,
+        task_state_machine_arn=task_state_machine_arn,
+        app_state_machine_arn=app_state_machine_arn)
+
+
+def cleanup(arn_context):
+    # todo delete the value returned by create_state_machines above
     pass

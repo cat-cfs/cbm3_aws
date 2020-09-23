@@ -82,6 +82,9 @@ def run_tasks(task_message, local_working_dir, s3_interface):
         upload.upload_results_database(
             s3_interface, task.project_code, task.simulation_id,
             task.results_database_path)
+        upload.upload_tempfiles(
+            s3_interface, task.project_code, task.simulation_id,
+            task.tempfiles_output_dir)
 
 
 def iterate_tasks(task_message, local_projects, local_results_dir):

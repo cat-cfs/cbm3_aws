@@ -1,8 +1,10 @@
-import boto3
 import os
 from types import SimpleNamespace
 import json
+from contextlib import contextmanager
 
+
+import boto3
 client = boto3.client('stepfunctions')
 
 
@@ -21,7 +23,7 @@ def load_state_machine_definition(path, **template_kwargs):
         return json.load(fp)
 
 
-def create_worker_activity(activity_task_name):
+def create_worker_activity(client, activity_task_name):
     response = client.create_activity(
         name=activity_task_name
         # tags=[
@@ -34,7 +36,7 @@ def create_worker_activity(activity_task_name):
     return response["actvivityArn"]
 
 
-def create_task_state_machine(worker_activity_resource_arn, role_arn,
+def create_task_state_machine(client, worker_activity_resource_arn, role_arn,
                               cloud_watch_logs_group_arn):
 
     state_machine_definition = load_state_machine_definition(
@@ -71,7 +73,7 @@ def create_task_state_machine(worker_activity_resource_arn, role_arn,
     return response["stateMachineArn"]
 
 
-def create_application_state_machine(task_state_machine_arn, role_arn,
+def create_application_state_machine(client, task_state_machine_arn, role_arn,
                                      cloud_watch_logs_group_arn):
     # TODO: template the cbm_run_state_machine defintion with the value of
     # cbm3_run_task_state_machine_response["stateMachineArn"]
@@ -110,24 +112,42 @@ def create_application_state_machine(task_state_machine_arn, role_arn,
     return cbm3_run_state_machine_response["stateMachineArn"]
 
 
-def create_state_machines(role_arn, cloud_watch_logs_group_arn):
+@contextmanager
+def create_state_machines(client, activity_task_name, role_arn,
+                          cloud_watch_logs_group_arn):
 
-    activity_arn = create_worker_activity(
-        activity_task_name="cbm_run_task_activity")
-    task_state_machine_arn = create_task_state_machine(
-        worker_activity_resource_arn=activity_arn,
-        role_arn=role_arn,
-        cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
-    app_state_machine_arn = create_application_state_machine(
-        task_state_machine_arn=task_state_machine_arn,
-        role_arn=role_arn,
-        cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
-    return SimpleNamespace(
-        activity_arn=activity_arn,
-        task_state_machine_arn=task_state_machine_arn,
-        app_state_machine_arn=app_state_machine_arn)
+    try:
+        activity_arn = create_worker_activity(
+            client=client, activity_task_name=activity_task_name)
+        task_state_machine_arn = create_task_state_machine(
+            client=client, worker_activity_resource_arn=activity_arn,
+            role_arn=role_arn,
+            cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
+        app_state_machine_arn = create_application_state_machine(
+            client=client, task_state_machine_arn=task_state_machine_arn,
+            role_arn=role_arn,
+            cloud_watch_logs_group_arn=cloud_watch_logs_group_arn)
+        arn_context = SimpleNamespace(
+            client=client, activity_arn=activity_arn,
+            task_state_machine_arn=task_state_machine_arn,
+            app_state_machine_arn=app_state_machine_arn)
+        yield arn_context
+    finally:
+        cleanup(arn_context)
 
 
-def cleanup(arn_context):
+def cleanup(client, arn_context):
     # todo delete the value returned by create_state_machines above
-    pass
+    client.delete_state_machine(
+        stateMachineArn=arn_context.app_state_machine_arn)
+    client.delete_state_machine(
+        stateMachineArn=arn_context.task_state_machine_arn)
+    client.delete_activity(
+        activityArn=arn_context.activity_arn)
+
+
+def start_execution(client, name, arn_context, task_list):
+    client.start_execution(
+        stateMachineArn=arn_context.app_state_machine_arn,
+        name=name,
+        input=json.dumps(task_list))

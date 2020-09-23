@@ -73,11 +73,11 @@ class S3Interface(object):
                 "specified pathToArchive '{0}' is neither a dir or a file path"
                 .format(pathToArchive))
 
-    def unpack_file_or_directory(self, archiveName, destinationPath):
+    def unpack_file_or_directory(self, archive_name, destination_path):
         logging.info(
             "upacking files in '{0}' to '{1}'".format(
-                archiveName, destinationPath))
-        with zipfile.ZipFile(archiveName, 'r', allowZip64=True) as z:
+                archive_name, destination_path))
+        with zipfile.ZipFile(archive_name, 'r', allowZip64=True) as z:
             files = z.namelist()
             if self.__singleFileFlag in files:
                 if len(files) != 2:
@@ -85,8 +85,8 @@ class S3Interface(object):
                         "single file archive expected to have a single file")
                 # it's a single file archive, so the destination path is
                 # assumed to be the full path to the filename
-                destinationDir = os.path.dirname(destinationPath)
-                destinationFileName = os.path.basename(destinationPath)
+                destinationDir = os.path.dirname(destination_path)
+                destinationFileName = os.path.basename(destination_path)
                 compressedFileName = [
                     x for x in files if x != self.__singleFileFlag][0]
                 z.extractall(destinationDir)
@@ -95,25 +95,25 @@ class S3Interface(object):
                     os.path.join(destinationDir, destinationFileName))
                 os.remove(os.path.join(destinationDir, self.__singleFileFlag))
             else:
-                z.extractall(destinationPath)
+                z.extractall(destination_path)
 
-    def upload_compressed(self, keyNamePrefix, documentName, localPath):
+    def upload_compressed(self, key_name_prefix, document_name, local_path):
 
-        fn = self.archive_file_or_directory(localPath, documentName)
+        fn = self.archive_file_or_directory(local_path, document_name)
         # archive directory may add a file extension
         ext = os.path.splitext(fn)[1]
-        documentName = documentName + ext
-        self.upload_file(fn, "/".join([keyNamePrefix, documentName]))
+        document_name = document_name + ext
+        self.upload_file(fn, "/".join([key_name_prefix, document_name]))
         os.remove(fn)
 
-    def download_compressed(self, keyNamePrefix, documentName, localPath):
-        documentName = "{0}.{1}".format(documentName, self.__format)
+    def download_compressed(self, key_name_prefix, document_name, local_path):
+        document_name = "{0}.{1}".format(document_name, self.__format)
         archiveName = os.path.join(
-            self.local_temp_dir, documentName.replace('/', '_'))
+            self.local_temp_dir, document_name.replace('/', '_'))
         # for the above replace: if the documentname itself represents a
         # nested S3 key, convert it to something that can be written to
         # file systems for the local temp file
         self.download_file(
-            "/".join([keyNamePrefix, documentName]), archiveName)
-        self.unpack_file_or_directory(archiveName, localPath)
+            "/".join([key_name_prefix, document_name]), archiveName)
+        self.unpack_file_or_directory(archiveName, local_path)
         os.remove(archiveName)

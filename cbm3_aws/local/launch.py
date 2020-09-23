@@ -3,9 +3,7 @@ from types import SimpleNamespace
 import json
 from contextlib import contextmanager
 
-
-import boto3
-client = boto3.client('stepfunctions')
+from cbm3_aws import constants
 
 
 def get_local_dir():
@@ -25,19 +23,11 @@ def load_state_machine_definition(path, **template_kwargs):
 
 def create_worker_activity(client, activity_task_name):
     response = client.create_activity(
-        name=activity_task_name
-        # tags=[
-        #    {
-        #        'key': 'string',
-        #        'value': 'string'
-        #    },
-        # ]
-        )
+        name=activity_task_name)
     return response["actvivityArn"]
 
 
-def create_task_state_machine(client, worker_activity_resource_arn, role_arn,
-                              cloud_watch_logs_group_arn):
+def create_task_state_machine(client, worker_activity_resource_arn, role_arn):
 
     state_machine_definition = load_state_machine_definition(
         os.path.join(get_local_dir(), "cbm_run_state_machine.json"),
@@ -47,36 +37,12 @@ def create_task_state_machine(client, worker_activity_resource_arn, role_arn,
         name='cbm3_run_task_state_machine',
         definition=state_machine_definition,
         roleArn=role_arn,
-        type='STANDARD',
-        loggingConfiguration={
-            'level': 'ALL',
-            'includeExecutionData': True,
-            'destinations': [
-                {
-                    'cloudWatchLogsLogGroup': {
-                        'logGroupArn': cloud_watch_logs_group_arn
-                    }
-                },
-            ]
-        }
-        # tags=[
-        #    {
-        #        'key': 'string',
-        #        'value': 'string'
-        #    },
-        # ]
-        # tracingConfiguration={
-        #    'enabled': True
-        # }
-    )
+        type='STANDARD')
 
     return response["stateMachineArn"]
 
 
-def create_application_state_machine(client, task_state_machine_arn, role_arn,
-                                     cloud_watch_logs_group_arn):
-    # TODO: template the cbm_run_state_machine defintion with the value of
-    # cbm3_run_task_state_machine_response["stateMachineArn"]
+def create_application_state_machine(client, task_state_machine_arn, role_arn):
 
     state_machine_definition = load_state_machine_definition(
         os.path.join(get_local_dir(), "cbm_run_state_machine.json"),
@@ -86,28 +52,7 @@ def create_application_state_machine(client, task_state_machine_arn, role_arn,
         name='cbm3_run_state_machine',
         definition=state_machine_definition,
         roleArn=role_arn,
-        type='STANDARD',
-        loggingConfiguration={
-            'level': 'ALL',
-            'includeExecutionData': True,
-            'destinations': [
-                {
-                    'cloudWatchLogsLogGroup': {
-                        'logGroupArn': cloud_watch_logs_group_arn
-                    }
-                },
-            ]
-        }
-        # tags=[
-        #    {
-        #        'key': 'string',
-        #        'value': 'string'
-        #    },
-        # ]
-        # tracingConfiguration={
-        #    'enabled': True
-        # }
-    )
+        type='STANDARD')
 
     return cbm3_run_state_machine_response["stateMachineArn"]
 
@@ -151,3 +96,15 @@ def start_execution(client, name, arn_context, task_list):
         stateMachineArn=arn_context.app_state_machine_arn,
         name=name,
         input=json.dumps(task_list))
+
+
+def run_app(client, role_arn, task_list):
+    # import boto3
+    # client = boto3.client('stepfunctions')
+    activity_task_name = constants.CBM_RUN_ACTIVITY_NAME
+    execution_name = ""
+    task_list = []
+    with create_state_machines(client, activity_task_name,
+                               role_arn) as arn_context:
+
+        start_execution(client, execution_name, arn_context, task_list)

@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 import json
 from contextlib import contextmanager
-
 from cbm3_aws import constants
 from cbm3_aws.local import cbm3_run_task_state_machine
 from cbm3_aws.local import cbm3_run_state_machine
@@ -43,30 +42,31 @@ def _create_application_state_machine(client, task_state_machine_arn,
     return cbm3_run_state_machine_response["stateMachineArn"]
 
 
-@contextmanager
 def _create_state_machines(client, activity_task_name, role_arn,
                            max_concurrency):
 
-    try:
-        activity_arn = _create_worker_activity(
-            client=client, activity_task_name=activity_task_name)
-        task_state_machine_arn = _create_task_state_machine(
-            client=client, worker_activity_resource_arn=activity_arn,
-            role_arn=role_arn)
-        app_state_machine_arn = _create_application_state_machine(
-            client=client, task_state_machine_arn=task_state_machine_arn,
-            role_arn=role_arn, max_concurrency=max_concurrency)
-        arn_context = SimpleNamespace(
-            client=client, activity_arn=activity_arn,
-            task_state_machine_arn=task_state_machine_arn,
-            app_state_machine_arn=app_state_machine_arn)
-        yield arn_context
-    finally:
-        _cleanup(arn_context)
+    activity_arn = _create_worker_activity(
+        client=client, activity_task_name=activity_task_name)
+    task_state_machine_arn = _create_task_state_machine(
+        client=client, worker_activity_resource_arn=activity_arn,
+        role_arn=role_arn)
+    app_state_machine_arn = _create_application_state_machine(
+        client=client, task_state_machine_arn=task_state_machine_arn,
+        role_arn=role_arn, max_concurrency=max_concurrency)
+    arn_context = SimpleNamespace(
+        client=client, activity_arn=activity_arn,
+        task_state_machine_arn=task_state_machine_arn,
+        app_state_machine_arn=app_state_machine_arn)
+    return arn_context
 
 
 def _cleanup(client, arn_context):
+    """[summary]
 
+    Args:
+        client ([type]): [description]
+        arn_context ([type]): [description]
+    """
     client.delete_state_machine(
         stateMachineArn=arn_context.app_state_machine_arn)
     client.delete_state_machine(
@@ -82,7 +82,8 @@ def _start_execution(client, name, arn_context, task_list):
         input=json.dumps(task_list))
 
 
-def run(client, role_arn, max_task_concurrency, task_list):
+@contextmanager
+def run(client, role_arn, execution_name, max_task_concurrency, task_list):
     """Start step functions to run concurrent CBM3 tasks
 
     Args:
@@ -110,11 +111,14 @@ def run(client, role_arn, max_task_concurrency, task_list):
                 ]
             ]
         )
+
+    Yields:
+        object: an object containing named ARN for the step function resources
     """
-    # import boto3
-    # client = boto3.client('stepfunctions')
-    execution_name = ""
-    task_list = []
-    with _create_state_machines(client, role_arn,
-                                max_task_concurrency) as arn_context:
-        _start_execution(client, execution_name, arn_context, task_list)
+    arn_context = _create_state_machines(
+        client, role_arn, max_task_concurrency)
+    _start_execution(client, execution_name, arn_context, task_list)
+    try:
+        yield arn_context
+    finally:
+        _cleanup(client, arn_context)

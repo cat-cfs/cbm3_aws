@@ -44,7 +44,6 @@ def create_launch_template(client, image_ami_id, instance_type,
             'EbsOptimized': False,
             'IamInstanceProfile': {
                 'Arn': iam_instance_profile_arn,
-                'Name': constants.AUTOSCALE_IAM_INSTANCE_PROFILE_NAME
             },
             'ImageId': image_ami_id,
             'InstanceType': instance_type,

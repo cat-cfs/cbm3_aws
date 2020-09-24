@@ -18,7 +18,7 @@ def _create_task_state_machine(client, worker_activity_resource_arn, role_arn):
         cbm_run_task_activity_arn=worker_activity_resource_arn)
 
     response = client.create_state_machine(
-        name='cbm3_run_task_state_machine',
+        name=constants.CBM3_RUN_TASK_STATE_MACHINE_NAME,
         definition=state_machine_definition,
         roleArn=role_arn,
         type='STANDARD')
@@ -34,7 +34,7 @@ def _create_application_state_machine(client, task_state_machine_arn,
         max_concurrency=max_concurrency)
 
     cbm3_run_state_machine_response = client.create_state_machine(
-        name='cbm3_run_state_machine',
+        name=constants.CBM3_RUN_STATE_MACHINE_NAME,
         definition=state_machine_definition,
         roleArn=role_arn,
         type='STANDARD')

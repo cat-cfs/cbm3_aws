@@ -109,8 +109,6 @@ def create_autoscaling_group(client, launch_template_response, min_size,
         },
         MinSize=min_size,
         MaxSize=max_size,
-        PlacementGroup='string',
-        VPCZoneIdentifier='string',
         NewInstancesProtectedFromScaleIn=True,
     )
     return response

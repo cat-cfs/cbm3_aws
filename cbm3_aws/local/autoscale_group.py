@@ -3,8 +3,22 @@ import datetime
 from cbm3_aws import constants
 
 
+def create_userdata():
+    """creates the script to run at the start of each instance worker
+
+    Returns:
+        str: lines of commands to run in AWS EC2 user-data at EC2 startup
+    """
+    commands = [
+        "<script>",
+        "shutdown /s",
+        "</script>"
+    ]
+    return "\n".join(commands)
+
+
 def create_launch_template(client, image_ami_id, instance_type,
-                           iam_instance_profile_arn):
+                           iam_instance_profile_arn, user_data):
     """Create a launch template for provisioning instances
 
     Args:
@@ -14,6 +28,7 @@ def create_launch_template(client, image_ami_id, instance_type,
             (ex. 't1.micro')
         iam_instance_profile_arn (str): ARN for for the Iam instance profile
             to attach to launched instances
+        user_data (str): line break seperated commands to run on instance start
 
     Returns:
         dict: the return value of boto3.EC2.Client.create_launch_template
@@ -37,7 +52,7 @@ def create_launch_template(client, image_ami_id, instance_type,
                 'Enabled': True
             },
             'InstanceInitiatedShutdownBehavior': 'terminate',
-            'UserData': 'string',
+            'UserData': create_userdata(),
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -79,5 +94,23 @@ def create_launch_template(client, image_ami_id, instance_type,
                 ]
             },
         ]
+    )
+
+    return response
+
+
+def create_autoscaling_group(client, launch_template_response, min_size,
+                             max_size):
+    response = client.create_auto_scaling_group(
+        AutoScalingGroupName='string',
+        LaunchConfigurationName='string',
+        LaunchTemplate={
+            'LaunchTemplateId': launch_template_response['LaunchTemplateId'],
+        },
+        MinSize=min_size,
+        MaxSize=max_size,
+        PlacementGroup='string',
+        VPCZoneIdentifier='string',
+        NewInstancesProtectedFromScaleIn=True,
     )
     return response

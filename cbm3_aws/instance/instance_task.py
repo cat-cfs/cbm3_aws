@@ -40,8 +40,10 @@ def run(activity_arn, s3_bucket_name):
         # Sleep the instance, so that it does not terminate and cause
         # autoscaling group to launch a new instance.
         # Need a better solution for this (autoscale CPU % trigger?)
-        while True:
-            logger.debug("still alive")
+        while not get_activity_task_response["taskToken"]:
+            logger.info("instance sleeping, trying to fetching activity task")
+            get_activity_task_response = client.get_activity_task(
+                activityArn=activity_arn)
             time.sleep(60)
 
     try:

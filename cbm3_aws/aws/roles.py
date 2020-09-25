@@ -9,7 +9,7 @@ def delete_role(client, role_context):
     pass
 
 
-def create_state_machine_execution_policy(client, account_number):
+def create_state_machine_role(client, account_number):
     role_name = "cbm3_state_machine_role"
     prefix = f"arn:aws:states:*:{account_number}"
     resource_arn_list = [
@@ -75,6 +75,7 @@ def create_state_machine_execution_policy(client, account_number):
         PolicyArn=create_policy_response["Arn"])
 
     return SimpleNamespace(
+        role_arn=create_role_response["Arn"],
         role_name=create_role_response["RoleName"],
         policy_arn=create_policy_response["Arn"])
 
@@ -129,5 +130,6 @@ def create_instance_iam_role(client, s3_bucket_name):
         PolicyArn=create_policy_response["Arn"])
 
     return SimpleNamespace(
+        role_arn=create_role_response["Arn"],
         role_name=create_role_response["RoleName"],
         policy_arn=create_policy_response["Arn"])

@@ -6,7 +6,7 @@ from cbm3_aws.instance import instance_task
 def main():
     log_helper.start_logging()
     logger = log_helper.get_logger()
-    logger.info("start up")
+    logger.info("run_instance start up")
 
     parser = ArgumentParser(
         description="Run the cbm3_aws instance task")

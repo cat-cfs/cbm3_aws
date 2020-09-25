@@ -9,7 +9,7 @@ def start_logging(level):
         "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
         datefmt="%m-%d %H:%M")
 
-    log_path = "spatial_rollback_{date}.log".format(
+    log_path = "cbm3_aws_log_{date}.log".format(
         date=datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
     fileHandler = logging.FileHandler(log_path, "w")
     fileHandler.setFormatter(logFormatter)

@@ -21,7 +21,7 @@ def start_app():
         sfn_client = boto3.client('stepfunctions', region_name=region_name)
 
         s3_bucket.create_bucket(
-            bucket_name=s3_bucket_name, region=region_name)
+            client=s3_client, bucket_name=s3_bucket_name, region=region_name)
 
         iam_role_context = roles.create_instance_iam_role(
             client=iam_client, s3_bucket_name=s3_bucket_name)
@@ -33,7 +33,7 @@ def start_app():
             client=sfn_client, role_arn=state_machine_role_context.role_arn,
             max_concurrency=n_instances)
 
-
+        autoscale_group.create_autoscaling_group()
 
     except ClientError as err:
         # from:

@@ -18,17 +18,17 @@ def create_userdata():
     return "\n".join(commands)
 
 
-def delete_launch_template(client, launch_template_context):
+def delete_launch_template(client, context):
     """Drop launch template associated with the specified context
 
     Args:
         client (EC2.Client): boto3 ec2 client
-        launch_template_context (object): context object returned by:
+        context (object): context object returned by:
             :py:func:`create_launch_template`
     """
     client.delete_launch_template(
         DryRun=False,
-        LaunchTemplateId=launch_template_context.launch_template_id)
+        LaunchTemplateId=context.launch_template_id)
 
 
 def create_launch_template(client, image_ami_id, instance_type,
@@ -45,7 +45,7 @@ def create_launch_template(client, image_ami_id, instance_type,
         user_data (str): line break seperated commands to run on instance start
 
     Returns:
-        dict: the return value of boto3.EC2.Client.create_launch_template
+        object: launch template context object
     """
     client_token = str(uuid.uuid4())
     spot_request_valid_date = \
@@ -114,16 +114,40 @@ def create_launch_template(client, image_ami_id, instance_type,
         launch_template_id=response["LaunchTemplateId"])
 
 
-def create_autoscaling_group(client, launch_template_context, min_size,
-                             max_size):
+def create_autoscaling_group(client, launch_template_context, size):
+    """Create an autoscaling group to manage spot instances.
+
+    Args:
+        client (AutoScaling.Client): boto3 autoscaling client
+        launch_template_context (object): Return value of:
+            :py:func:`create_launch_template`
+        size (int): number of instances to run in auto scaling group
+
+    Returns:
+        object: autoscaling group context
+    """
     response = client.create_auto_scaling_group(
-        AutoScalingGroupName='string',
-        LaunchConfigurationName='string',
+        AutoScalingGroupName=constants.AUTOSCALE_GROUP_NAME,
         LaunchTemplate={
             'LaunchTemplateId': launch_template_context.launch_template_id,
         },
-        MinSize=min_size,
-        MaxSize=max_size,
+        MinSize=size,
+        MaxSize=size,
         NewInstancesProtectedFromScaleIn=True,
     )
-    return response
+    return SimpleNamespace(
+        auto_scaling_group_name=response["AutoScalingGroupName"])
+
+
+def delete_autoscaling_group(client, context):
+    """Delete an autoscaling group created by
+        :py:func:`create_autoscaling_group`
+
+    Args:
+        client (AutoScaling.Client): boto3 autoscaling client
+        context (object): context object returned by:
+            :py:func:`create_autoscaling_group`
+    """
+    client.delete_auto_scaling_group(
+        AutoScalingGroupName=context.auto_scaling_group_name,
+        ForceDelete=True)

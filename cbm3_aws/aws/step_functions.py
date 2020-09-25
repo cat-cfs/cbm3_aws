@@ -51,11 +51,11 @@ def create_state_machines(client, role_arn,
     app_state_machine_arn = _create_application_state_machine(
         client=client, task_state_machine_arn=task_state_machine_arn,
         role_arn=role_arn, max_concurrency=max_concurrency)
-    arn_context = SimpleNamespace(
+    state_machine_context = SimpleNamespace(
         client=client, activity_arn=activity_arn,
         task_state_machine_arn=task_state_machine_arn,
         app_state_machine_arn=app_state_machine_arn)
-    return arn_context
+    return state_machine_context
 
 
 def cleanup(client, arn_context):
@@ -68,11 +68,11 @@ def cleanup(client, arn_context):
         activityArn=arn_context.activity_arn)
 
 
-def start_execution(client, name, arn_context, task_list):
+def start_execution(client, name, state_machine_context, tasks):
     client.start_execution(
-        stateMachineArn=arn_context.app_state_machine_arn,
+        stateMachineArn=state_machine_context.app_state_machine_arn,
         name=name,
-        input=json.dumps(task_list))
+        input=json.dumps(tasks))
 
 
 #def run(client, role_arn, execution_name, max_task_concurrency, tasks):

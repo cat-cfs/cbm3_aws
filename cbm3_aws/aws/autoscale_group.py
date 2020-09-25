@@ -4,20 +4,6 @@ from types import SimpleNamespace
 from cbm3_aws import constants
 
 
-def create_userdata():
-    """creates the script to run at the start of each instance worker
-
-    Returns:
-        str: lines of commands to run in AWS EC2 user-data at EC2 startup
-    """
-    commands = [
-        "<script>",
-        "shutdown /s",
-        "</script>"
-    ]
-    return "\n".join(commands)
-
-
 def delete_launch_template(client, context):
     """Drop launch template associated with the specified context
 

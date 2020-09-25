@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from cbm3_aws import constants
 import json
 
 
@@ -8,10 +7,11 @@ def delete_role(client, role_context):
     role_context
 
     Args:
-        client ([type]): [description]
-        role_context ([type]): [description]
+        client (IAM.client): boto3 IAM client
+        role_context (namespace): object containing identifying information
+            for the role to delete.
     """
-    pass
+    client.delete_role(RoleName=role_context.role_name)
 
 
 def delete_policy(client, policy_context):
@@ -19,17 +19,30 @@ def delete_policy(client, policy_context):
      policy_context
 
     Args:
-        client ([type]): [description]
-        policy_context ([type]): [description]
+        client (IAM.client): boto3 IAM client
+        policy_context (namespace): object containing the ARN for the policy
+            to delete.
     """
-    pass
+    client.delete_policy(
+        PolicyArn=policy_context.policy_arn)
 
 
-def create_autoscaling_group_policy(client, account_number):
+def create_autoscaling_group_policy(client, account_number, names):
+    """Create policy to allow updating autoscale group
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        account_number (str): the AWS account number for filtering permitted
+            resources
+        names (namespace): the names used to label provisioned aws resources
+
+    Returns:
+        namespace: object containing the policy ARN
+    """
     resource_string = \
         "arn:aws:autoscaling:*:" \
         f"{account_number}:autoScalingGroup:*" \
-        f":autoScalingGroupName/{constants.AUTOSCALE_GROUP_NAME}"
+        f":autoScalingGroupName/{names.autoscale_group}"
 
     policy = {
         "Version": "2012-10-17",
@@ -58,14 +71,25 @@ def create_autoscaling_group_policy(client, account_number):
     return SimpleNamespace(policy_arn=create_policy_response["Arn"])
 
 
-def create_state_machine_policy(client, account_number):
+def create_state_machine_policy(client, account_number, names):
+    """Create a state machine policy to allow state machine function
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        account_number (str): the AWS account number for filtering permitted
+            resources
+        names (namespace): the names used to label provisioned aws resources
+
+    Returns:
+        namespace: object containing the policy ARN
+    """
     prefix = f"arn:aws:states:*:{account_number}"
     resource_arn_list = [
-        f"{prefix}:activity:{constants.CBM_RUN_ACTIVITY_NAME}",
-        f"{prefix}:stateMachine:{constants.CBM3_RUN_STATE_MACHINE_NAME}",
-        f"{prefix}:execution:{constants.CBM3_RUN_STATE_MACHINE_NAME}:*"
-        f"{prefix}:stateMachine:{constants.CBM3_RUN_TASK_STATE_MACHINE_NAME}",
-        f"{prefix}:execution:{constants.CBM3_RUN_TASK_STATE_MACHINE_NAME}:*"
+        f"{prefix}:activity:{names.run_activity}",
+        f"{prefix}:stateMachine:{names.run_state_machine}",
+        f"{prefix}:execution:{names.run_task_state_machine}:*",
+        f"{prefix}:stateMachine:{names.run_state_machine}",
+        f"{prefix}:execution:{names.run_task_state_machine}:*"
     ]
 
     policy = {
@@ -100,6 +124,17 @@ def create_state_machine_policy(client, account_number):
 
 
 def create_s3_bucket_policy(client, s3_bucket_name):
+    """Create a policy object for permitting put/get/delete operations on the
+    specified named bucket
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        s3_bucket_name (str): the name of the bucket for which to assign the
+            policy
+
+    Returns:
+        namespace: a namespace containing the policy ARN
+    """
     policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -127,6 +162,17 @@ def create_s3_bucket_policy(client, s3_bucket_name):
 
 
 def create_state_machine_role(client, policy_context_list):
+    """Create an state machine IAM role
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        policy_context_list (list): list of objects containing the
+            policy ARN to assign to the state machine IAM role.
+
+    Returns:
+        namespace: context object containing the IAM role's identifying
+            information
+    """
     role_name = "cbm3_state_machine_role"
     states_assume_role_policy = {
         "Version": "2012-10-17",
@@ -159,6 +205,17 @@ def create_state_machine_role(client, policy_context_list):
 
 
 def create_instance_iam_role(client, policy_context_list):
+    """Create an instance IAM role
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        policy_context_list (list): list of objects containing the
+            policy ARN to assign to the instance IAM role.
+
+    Returns:
+        namespace: context object containing the IAM role's identifying
+            information
+    """
     role_name = "cbm3_instance_iam_role"
 
     ec2_assume_role_policy = {

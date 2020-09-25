@@ -1,7 +1,6 @@
 import uuid
 import datetime
 from types import SimpleNamespace
-from cbm3_aws import constants
 
 
 def delete_launch_template(client, context):
@@ -18,7 +17,8 @@ def delete_launch_template(client, context):
 
 
 def create_launch_template(client, image_ami_id, instance_type,
-                           iam_instance_profile_arn, user_data):
+                           iam_instance_profile_arn, user_data,
+                           names):
     """Create a launch template for provisioning instances
 
     Args:
@@ -29,6 +29,7 @@ def create_launch_template(client, image_ami_id, instance_type,
         iam_instance_profile_arn (str): ARN for for the Iam instance profile
             to attach to launched instances
         user_data (str): line break seperated commands to run on instance start
+        names (namespace): the names used to label provisioned aws resources
 
     Returns:
         object: launch template context object
@@ -39,7 +40,7 @@ def create_launch_template(client, image_ami_id, instance_type,
     response = client.create_launch_template(
         DryRun=False,
         ClientToken=client_token,
-        LaunchTemplateName=constants.AUTOSCALE_LAUNCH_TEMPLATE_NAME,
+        LaunchTemplateName=names.autoscale_launch_template,
         LaunchTemplateData={
             'EbsOptimized': False,
             'IamInstanceProfile': {
@@ -51,7 +52,7 @@ def create_launch_template(client, image_ami_id, instance_type,
                 'Enabled': True
             },
             'InstanceInitiatedShutdownBehavior': 'terminate',
-            'UserData': create_userdata(),
+            'UserData': user_data,
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
@@ -100,7 +101,7 @@ def create_launch_template(client, image_ami_id, instance_type,
         launch_template_id=response["LaunchTemplateId"])
 
 
-def create_autoscaling_group(client, launch_template_context, size):
+def create_autoscaling_group(client, launch_template_context, size, names):
     """Create an autoscaling group to manage spot instances.
 
     Args:
@@ -108,12 +109,13 @@ def create_autoscaling_group(client, launch_template_context, size):
         launch_template_context (object): Return value of:
             :py:func:`create_launch_template`
         size (int): number of instances to run in auto scaling group
+        names (namespace): the names used to label provisioned aws resources
 
     Returns:
         object: autoscaling group context
     """
     response = client.create_auto_scaling_group(
-        AutoScalingGroupName=constants.AUTOSCALE_GROUP_NAME,
+        AutoScalingGroupName=names.autoscale_group,
         LaunchTemplate={
             'LaunchTemplateId': launch_template_context.launch_template_id,
         },

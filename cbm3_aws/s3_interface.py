@@ -1,6 +1,8 @@
 import os
 import zipfile
-import logging
+from cbm3_aws import log_helper
+
+logger = log_helper.get_logger()
 
 
 class S3Interface(object):
@@ -12,17 +14,15 @@ class S3Interface(object):
         self.__format = "zip"
         self.__singleFileFlag = "__is__single__file_archive__"
 
-    def download_file(self, keyName, localPath, logged=True):
-        if logged:
-            logging.info(
-                "downloading file from S3 '{0}' to '{1}'".format(
-                    keyName, localPath))
+    def download_file(self, keyName, localPath):
+        logger.debug(
+            "downloading file from S3 '{0}' to '{1}'".format(
+                keyName, localPath))
         self.bucket.download_file(keyName, localPath)
 
-    def upload_file(self, localPath, keyName, logged=True):
-        if logged:
-            logging.info(
-                "uploading file '{0}' to S3 '{1}'".format(localPath, keyName))
+    def upload_file(self, localPath, keyName):
+        logger.debug(
+            "uploading file '{0}' to S3 '{1}'".format(localPath, keyName))
         self.bucket.upload_file(localPath, keyName)
 
     def make_zipfile(self, output_filename, source_dir):
@@ -46,7 +46,7 @@ class S3Interface(object):
     def archive_file_or_directory(self, pathToArchive, archiveName):
         if os.path.isdir(pathToArchive):
             archivePath = os.path.join(self.local_temp_dir, archiveName)
-            logging.info(
+            logger.debug(
                 "archiving documents at '{0}' to '{1}'".format(
                     pathToArchive, archivePath))
             outputPath = archivePath + '.zip'
@@ -56,7 +56,7 @@ class S3Interface(object):
             outputPath = \
                 os.path.join(self.local_temp_dir, archiveName) + \
                 "." + self.__format
-            logging.info(
+            logger.debug(
                 "archiving file '{0}' to '{1}'".format(
                     pathToArchive, outputPath))
             with zipfile.ZipFile(outputPath, 'w',
@@ -74,7 +74,7 @@ class S3Interface(object):
                 .format(pathToArchive))
 
     def unpack_file_or_directory(self, archive_name, destination_path):
-        logging.info(
+        logger.debug(
             "upacking files in '{0}' to '{1}'".format(
                 archive_name, destination_path))
         with zipfile.ZipFile(archive_name, 'r', allowZip64=True) as z:

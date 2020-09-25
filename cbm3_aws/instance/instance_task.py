@@ -30,7 +30,8 @@ def run(activity_arn, s3_bucket_name):
         activityArn=activity_arn)
 
     if not get_activity_task_response["taskToken"]:
-        # if there is a null task token it means their is no task available
+        # if there is a null task token it means there is no task available
+        return
     try:
         task_token = get_activity_task_response["taskToken"]
         heart_beat_process = Process(

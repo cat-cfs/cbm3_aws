@@ -1,7 +1,9 @@
 from types import SimpleNamespace
 import boto3
 from botocore.exceptions import ClientError
+from cbm3_aws.instance.user_data import create_userdata
 from cbm3_aws.aws import roles
+
 from cbm3_aws.aws import step_functions
 from cbm3_aws.aws import autoscale_group
 from cbm3_aws.aws import s3_bucket
@@ -11,15 +13,9 @@ def __get_account_number(sts_client):
     return sts_client.get_caller_identity()["Account"]
 
 
-def start():
-    region_name = ""
-    s3_bucket_name = ""
-    n_instances = 10
-    image_ami_id = ""
-    instance_type = ""
-    user_data = ""
-    execution_name = ""
-    tasks = {}
+def start(region_name, s3_bucket_name, n_instances, image_ami_id,
+          instance_type, execution_name, tasks):
+
     try:
         s3_client = boto3.client("s3", region_name=region_name)
         ec2_client = boto3.client("ec2")  # region_name=region_name)
@@ -54,6 +50,10 @@ def start():
         state_machine_context = step_functions.create_state_machines(
             client=sfn_client, role_arn=state_machine_role_context.role_arn,
             max_concurrency=n_instances)
+
+        user_data = create_userdata(
+            s3_bucket_name=s3_bucket_name,
+            activity_arn=state_machine_context.activity_arn)
 
         launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, image_ami_id=image_ami_id,

@@ -14,7 +14,7 @@ def __get_account_number(sts_client):
 
 
 def start(region_name, s3_bucket_name, n_instances, image_ami_id,
-          instance_type, execution_name, tasks):
+          instance_type, execution_name, tasks, names):
 
     try:
         s3_client = boto3.client("s3", region_name=region_name)
@@ -32,9 +32,9 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
         s3_bucket_policy_context = roles.create_s3_bucket_policy(
             client=iam_client, s3_bucket_name=s3_bucket_name)
         state_machine_policy_context = roles.create_state_machine_policy(
-            client=iam_client, account_number=account_number)
+            client=iam_client, account_number=account_number, names=names)
         autoscale_update_policy = roles.create_autoscaling_group_policy(
-            client=iam_client, account_number=account_number)
+            client=iam_client, account_number=account_number, names=names)
 
         instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
@@ -49,7 +49,7 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
 
         state_machine_context = step_functions.create_state_machines(
             client=sfn_client, role_arn=state_machine_role_context.role_arn,
-            max_concurrency=n_instances)
+            max_concurrency=n_instances, names=names)
 
         user_data = create_userdata(
             s3_bucket_name=s3_bucket_name,
@@ -67,7 +67,7 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
             size=n_instances)
 
         step_functions.start_execution(
-            client=sfn_client, name=execution_name,
+            client=sfn_client, name=names.step_functions_execution,
             state_machine_context=state_machine_context, tasks=tasks)
 
         return SimpleNamespace(

@@ -1,5 +1,6 @@
 import uuid
 import datetime
+from types import SimpleNamespace
 from cbm3_aws import constants
 
 
@@ -15,6 +16,19 @@ def create_userdata():
         "</script>"
     ]
     return "\n".join(commands)
+
+
+def delete_launch_template(client, launch_template_context):
+    """Drop launch template associated with the specified context
+
+    Args:
+        client (EC2.Client): boto3 ec2 client
+        launch_template_context (object): context object returned by:
+            :py:func:`create_launch_template`
+    """
+    client.delete_launch_template(
+        DryRun=False,
+        LaunchTemplateId=launch_template_context.launch_template_id)
 
 
 def create_launch_template(client, image_ami_id, instance_type,
@@ -95,16 +109,18 @@ def create_launch_template(client, image_ami_id, instance_type,
         ]
     )
 
-    return response
+    return SimpleNamespace(
+        launch_template_name=response["LaunchTemplateName"],
+        launch_template_id=response["LaunchTemplateId"])
 
 
-def create_autoscaling_group(client, launch_template_response, min_size,
+def create_autoscaling_group(client, launch_template_context, min_size,
                              max_size):
     response = client.create_auto_scaling_group(
         AutoScalingGroupName='string',
         LaunchConfigurationName='string',
         LaunchTemplate={
-            'LaunchTemplateId': launch_template_response['LaunchTemplateId'],
+            'LaunchTemplateId': launch_template_context.launch_template_id,
         },
         MinSize=min_size,
         MaxSize=max_size,

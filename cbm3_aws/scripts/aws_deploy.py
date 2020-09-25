@@ -10,4 +10,4 @@ def main():
 
     app.start(
         region_name, s3_bucket_name, n_instances, image_ami_id,
-        instance_type, tasks)
+        instance_type)

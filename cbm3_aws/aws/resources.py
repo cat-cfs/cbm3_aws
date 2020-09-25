@@ -7,16 +7,19 @@ from cbm3_aws.aws import roles
 from cbm3_aws.aws import step_functions
 from cbm3_aws.aws import autoscale_group
 from cbm3_aws.aws import s3_bucket
+from cbm3_aws.aws.names import get_names
+from cbm3_aws import log_helper
 
 
 def __get_account_number(sts_client):
     return sts_client.get_caller_identity()["Account"]
 
 
-def start(region_name, s3_bucket_name, n_instances, image_ami_id,
-          instance_type, execution_name, tasks, names):
-
+def deploy(region_name, s3_bucket_name, n_instances, image_ami_id,
+           instance_type):
+    logger = log_helper.get_logger()
     try:
+        names = get_names()
         s3_client = boto3.client("s3", region_name=region_name)
         ec2_client = boto3.client("ec2")  # region_name=region_name)
         auto_scale_client = boto3.client(
@@ -25,10 +28,12 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
         sts_client = boto3.client("sts", region_name=region_name)
         sfn_client = boto3.client('stepfunctions', region_name=region_name)
 
+        logger.info(f"creating s3 bucked {s3_bucket_name}")
         s3_bucket.create_bucket(
             client=s3_client, bucket_name=s3_bucket_name, region=region_name)
 
         account_number = __get_account_number(sts_client)
+        logger.info("creating policies")
         s3_bucket_policy_context = roles.create_s3_bucket_policy(
             client=iam_client, s3_bucket_name=s3_bucket_name)
         state_machine_policy_context = roles.create_state_machine_policy(
@@ -36,6 +41,7 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
         autoscale_update_policy = roles.create_autoscaling_group_policy(
             client=iam_client, account_number=account_number, names=names)
 
+        logger.info("creating iam roles")
         instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
             policy_context_list=[
@@ -66,19 +72,14 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
             launch_template_context=launch_template_context,
             size=n_instances)
 
-        step_functions.start_execution(
-            client=sfn_client, name=names.step_functions_execution,
-            state_machine_context=state_machine_context, tasks=tasks)
-
         return SimpleNamespace(
+            names=names,
             region_name=region_name,
             s3_bucket_name=s3_bucket_name,
             n_instances=n_instances,
             image_ami_id=image_ami_id,
             instance_type=instance_type,
             user_data=user_data,
-            execution_name=execution_name,
-            tasks=tasks,
             s3_bucket_policy_context=s3_bucket_policy_context,
             state_machine_policy_context=state_machine_policy_context,
             instance_iam_role_context=instance_iam_role_context,
@@ -91,8 +92,14 @@ def start(region_name, s3_bucket_name, n_instances, image_ami_id,
         # from:
         # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html
         if err.response['Error']['Code'] == 'InternalError':  # Generic error
-            print('Error Message: {}'.format(err.response['Error']['Message']))
-            print('Request ID: {}'.format(err.response['ResponseMetadata']['RequestId']))
-            print('Http code: {}'.format(err.response['ResponseMetadata']['HTTPStatusCode']))
+            logger.error(
+                'Error Message: {}'.format(
+                    err.response['Error']['Message']))
+            logger.error(
+                'Request ID: {}'.format(
+                    err.response['ResponseMetadata']['RequestId']))
+            logger.error(
+                'Http code: {}'.format(
+                    err.response['ResponseMetadata']['HTTPStatusCode']))
         else:
             raise err

@@ -12,10 +12,10 @@ def main():
         description="Run the cbm3_aws instance task")
 
     parser.add_argument(
-        "activity_arn",
+        "--activity_arn", required=True,
         help="Amazon Resource Name for a AWS step functions activity")
     parser.add_argument(
-        "s3_bucket_name",
+        "--s3_bucket_name", required=True,
         help="Name of the s3 bucket that the instance will interact with")
 
     args = parser.parse_args()

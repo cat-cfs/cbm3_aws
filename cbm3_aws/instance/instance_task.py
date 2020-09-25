@@ -15,7 +15,7 @@ def heartbeat(task_token):
     while True:
         client.send_task_heartbeat(
             taskToken=task_token)
-        time.sleep(60.0 - ((time.time() - start_time) % 60.0))
+        time.sleep(40.0 - ((time.time() - start_time) % 40.0))
 
 
 def run(activity_arn, s3_bucket_name):
@@ -30,8 +30,12 @@ def run(activity_arn, s3_bucket_name):
         activityArn=activity_arn)
 
     if not get_activity_task_response["taskToken"]:
-        # if there is a null task token it means there is no task available
-        return
+        # If there is a null task token it means there is no task available.
+        # Sleep the instance, so that it does not terminate and cause
+        # autoscaling group to launch a new instance
+        while True:
+            time.sleep(60)
+
     try:
         task_token = get_activity_task_response["taskToken"]
         heart_beat_process = Process(
@@ -58,11 +62,10 @@ def run(activity_arn, s3_bucket_name):
                 taskToken=task_token,
                 output=task_input)
     except Exception:
-        if task_token:
-            client.send_task_failure(
-                taskToken=task_token,
-                error="error",
-                cause=sys.exc_info()[0])
+        client.send_task_failure(
+            taskToken=task_token,
+            error="error",
+            cause=sys.exc_info()[0])
 
     finally:
         heart_beat_process.kill()

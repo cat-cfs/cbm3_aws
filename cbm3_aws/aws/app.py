@@ -32,11 +32,24 @@ def start():
         s3_bucket.create_bucket(
             client=s3_client, bucket_name=s3_bucket_name, region=region_name)
 
-        iam_role_context = roles.create_instance_iam_role(
+        account_number = __get_account_number(sts_client)
+        s3_bucket_policy_context = roles.create_s3_bucket_policy(
             client=iam_client, s3_bucket_name=s3_bucket_name)
+        state_machine_policy_context = roles.create_state_machine_policy(
+            client=iam_client, account_number=account_number)
+        autoscale_update_policy = roles.create_autoscaling_group_policy(
+            client=iam_client, account_number=account_number)
+
+        instance_iam_role_context = roles.create_instance_iam_role(
+            client=iam_client,
+            policy_context_list=[
+                s3_bucket_policy_context,
+                state_machine_policy_context,
+                autoscale_update_policy])
 
         state_machine_role_context = roles.create_state_machine_role(
-            client=iam_client, account_number=__get_account_number(sts_client))
+            client=iam_client,
+            policy_context_list=[state_machine_policy_context])
 
         state_machine_context = step_functions.create_state_machines(
             client=sfn_client, role_arn=state_machine_role_context.role_arn,
@@ -45,7 +58,7 @@ def start():
         launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, image_ami_id=image_ami_id,
             instance_type=instance_type,
-            iam_instance_profile_arn=iam_role_context.role_arn,
+            iam_instance_profile_arn=instance_iam_role_context.role_arn,
             user_data=user_data)
 
         autoscale_group_context = autoscale_group.create_autoscaling_group(
@@ -66,7 +79,9 @@ def start():
             user_data=user_data,
             execution_name=execution_name,
             tasks=tasks,
-            iam_role_context=iam_role_context,
+            s3_bucket_policy_context=s3_bucket_policy_context,
+            state_machine_policy_context=state_machine_policy_context,
+            instance_iam_role_context=instance_iam_role_context,
             state_machine_role_context=state_machine_role_context,
             state_machine_context=state_machine_context,
             launch_template_context=launch_template_context,

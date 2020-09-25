@@ -133,7 +133,8 @@ def create_autoscaling_group(client, launch_template_context, size):
         },
         MinSize=size,
         MaxSize=size,
-        NewInstancesProtectedFromScaleIn=True,
+        TerminationPolicies=["NewestInstance"],
+        NewInstancesProtectedFromScaleIn=False
     )
     return SimpleNamespace(
         auto_scaling_group_name=response["AutoScalingGroupName"])

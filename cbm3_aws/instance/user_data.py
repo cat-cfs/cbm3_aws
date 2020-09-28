@@ -17,7 +17,7 @@ def create_userdata(activity_arn, s3_bucket_name):
         "pip install git+https://github.com/cat-cfs/cbm3_python",
         "pip install git+https://github.com/cat-cfs/cbm3_aws",
         instance_run_script_command,
-        "shutdown /s",
+        # "shutdown /s",
         "</script>"
     ]
     return "\n".join(commands)

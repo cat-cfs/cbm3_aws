@@ -1,5 +1,5 @@
-from types import SimpleNamespace
 import json
+from cbm3_aws.namespace import Namespace
 
 
 def delete_role(client, role_context):
@@ -68,7 +68,7 @@ def create_autoscaling_group_policy(client, account_number, names):
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants access for updating app autoscale group')
-    return SimpleNamespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Arn"])
 
 
 def create_state_machine_policy(client, account_number, names):
@@ -120,7 +120,7 @@ def create_state_machine_policy(client, account_number, names):
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants access for state machine execution')
-    return SimpleNamespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Arn"])
 
 
 def create_s3_bucket_policy(client, s3_bucket_name):
@@ -158,7 +158,7 @@ def create_s3_bucket_policy(client, s3_bucket_name):
         Description='grants basic access to a particular s3 bucket for '
                     'IAM instance role')
 
-    return SimpleNamespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Arn"])
 
 
 def create_state_machine_role(client, policy_context_list):
@@ -199,7 +199,7 @@ def create_state_machine_role(client, policy_context_list):
             RoleName=role_name,
             PolicyArn=policy_context.policy_arn)
 
-    return SimpleNamespace(
+    return Namespace(
         role_arn=create_role_response["Arn"],
         role_name=create_role_response["RoleName"])
 
@@ -244,6 +244,6 @@ def create_instance_iam_role(client, policy_context_list):
             RoleName=role_name,
             PolicyArn=policy_context.policy_arn)
 
-    return SimpleNamespace(
+    return Namespace(
         role_arn=create_role_response["Arn"],
         role_name=create_role_response["RoleName"])

@@ -1,7 +1,7 @@
-from types import SimpleNamespace
 import json
-from cbm3_aws.local import cbm3_run_task_state_machine
-from cbm3_aws.local import cbm3_run_state_machine
+from cbm3_aws.aws import cbm3_run_task_state_machine
+from cbm3_aws.aws import cbm3_run_state_machine
+from cbm3_aws.namespace import Namespace
 
 
 def _create_worker_activity(client, names):
@@ -65,7 +65,7 @@ def create_state_machines(client, role_arn,
     app_state_machine_arn = _create_application_state_machine(
         client=client, task_state_machine_arn=task_state_machine_arn,
         role_arn=role_arn, max_concurrency=max_concurrency, names=names)
-    state_machine_context = SimpleNamespace(
+    state_machine_context = Namespace(
         client=client, activity_arn=activity_arn,
         task_state_machine_arn=task_state_machine_arn,
         app_state_machine_arn=app_state_machine_arn)

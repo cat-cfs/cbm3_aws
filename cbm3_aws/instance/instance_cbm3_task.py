@@ -1,8 +1,8 @@
 import os
-from types import SimpleNamespace
+
 from cbm3_python import toolbox_defaults
 from cbm3_python.simulation import projectsimulator
-
+from cbm3_aws.namespace import Namespace
 from cbm3_aws import download
 from cbm3_aws import upload
 
@@ -91,7 +91,7 @@ def iterate_tasks(task_message, local_projects, local_results_dir):
     for task in task_message:
         for simulation_id in task["simulation_ids"]:
             project_code = task["project_code"]
-            yield SimpleNamespace(
+            yield Namespace(
                 project_code=project_code,
                 project_path=local_projects[project_code],
                 simulation_id=simulation_id,

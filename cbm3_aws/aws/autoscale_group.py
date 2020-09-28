@@ -1,6 +1,6 @@
 import uuid
 import datetime
-from types import SimpleNamespace
+from cbm3_aws.namespace import Namespace
 
 
 def delete_launch_template(client, context):
@@ -96,35 +96,39 @@ def create_launch_template(client, image_ami_id, instance_type,
         ]
     )
 
-    return SimpleNamespace(
+    return Namespace(
         launch_template_name=response["LaunchTemplateName"],
         launch_template_id=response["LaunchTemplateId"])
 
 
-def create_autoscaling_group(client, launch_template_context, size, names):
+def create_autoscaling_group(client, launch_template_context, min_size,
+                             max_size, autoscale_group_name):
     """Create an autoscaling group to manage spot instances.
 
     Args:
         client (AutoScaling.Client): boto3 autoscaling client
         launch_template_context (object): Return value of:
             :py:func:`create_launch_template`
-        size (int): number of instances to run in auto scaling group
-        names (namespace): the names used to label provisioned aws resources
+        min_size (int): minimum number of instances to run in auto scaling
+            group.
+        max_size (int): maximum number of instances to run in auto scaling
+            group.
+        autoscale_group_name (str): the name of the autoscaling group
 
     Returns:
         object: autoscaling group context
     """
     response = client.create_auto_scaling_group(
-        AutoScalingGroupName=names.autoscale_group,
+        AutoScalingGroupName=autoscale_group_name,
         LaunchTemplate={
             'LaunchTemplateId': launch_template_context.launch_template_id,
         },
-        MinSize=size,
-        MaxSize=size,
+        MinSize=min_size,
+        MaxSize=max_size,
         TerminationPolicies=["NewestInstance"],
         NewInstancesProtectedFromScaleIn=False
     )
-    return SimpleNamespace(
+    return Namespace(
         auto_scaling_group_name=response["AutoScalingGroupName"])
 
 

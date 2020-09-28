@@ -25,7 +25,7 @@ def get_state_machine(cbm_run_task_activity_arn):
             },
             "DelayThenRestart": {
                 "Type": "Wait",
-                "Seconds": 10,
+                "Seconds": 60,
                 "Next": "RunCBMTask"
             }
         }

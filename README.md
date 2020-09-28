@@ -16,3 +16,16 @@ The scripts can be directly installed from github
 ```bash
 pip install git+https://github.com/smorken/cbm3_aws.git
 ```
+
+Deploy a cbm3_aws cluster from the windows command line
+
+```
+cbm3_aws_deploy ^
+    --region_name ca-central-1 ^
+    --s3_bucket_name my_cbm3_aws_bucket ^
+    --min_instances 1 ^
+    --max_instances 1 ^
+    --image_ami_id ami-00000 ^
+    --instance_type i3.large
+```
+

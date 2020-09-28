@@ -49,3 +49,7 @@ def main():
         instance_type=args.instance_type,
         resource_description_out_dir=os.path.abspath(
             args.resource_description_dir))
+
+
+if __name__ == "__main__":
+    main()

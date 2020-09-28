@@ -33,6 +33,44 @@ def __write_resources_file(resource_description, out_dir, uuid):
         json.dump(resource_description.to_dict(), out_file, indent=4)
 
 
+def cleanup(resource_description):
+    """Cleans up all resources allocated by the :py:func:`deploy` method.
+
+    Args:
+        resource_description (Namespace): [description]
+    """
+    rd = resource_description.to_dict()
+
+    ec2_client = boto3.client("ec2")  # region_name=region_name)
+    auto_scale_client = boto3.client(
+        'autoscaling', region_name=rd["region_name"])
+    iam_client = boto3.client("iam", region_name=rd["region_name"])
+    sfn_client = boto3.client('stepfunctions', region_name=rd["region_name"])
+
+    if "autoscale_group_context" in rd:
+        autoscale_group.delete_autoscaling_group(
+            client=auto_scale_client, context=rd["autoscale_group_context"])
+    if "launch_template_context" in rd:
+        autoscale_group.delete_launch_template(
+            client=ec2_client, context=rd["launch_template_context"])
+    if "state_machine_context" in rd:
+        step_functions.cleanup(
+            client=sfn_client, arn_context=rd["state_machine_context"])
+    if "state_machine_role_context" in rd:
+        roles.delete_role(
+            client=iam_client, role_context=rd["state_machine_role_context"])
+    if "instance_iam_role_context" in rd:
+        roles.delete_role(
+            client=iam_client, role_context=rd["instance_iam_role_context"])
+    if "state_machine_policy_context" in rd:
+        roles.delete_policy(
+            client=iam_client,
+            policy_context=rd["state_machine_policy_context"])
+    if "s3_bucket_policy_context" in rd:
+        roles.delete_policy(
+            client=iam_client, policy_context=rd["s3_bucket_policy_context"])
+
+
 def deploy(region_name, s3_bucket_name, min_instances, max_instances,
            image_ami_id, instance_type, resource_description_out_dir):
     logger = log_helper.get_logger()
@@ -71,17 +109,13 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
             client=iam_client, s3_bucket_name=rd.s3_bucket_name)
         rd.state_machine_policy_context = roles.create_state_machine_policy(
             client=iam_client, account_number=account_number, names=rd.names)
-        autoscale_update_policy = roles.create_autoscaling_group_policy(
-            client=iam_client, account_number=account_number,
-            names=rd.names.autoscale_group)
 
         logger.info("creating iam roles")
         instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
             policy_context_list=[
                 rd.s3_bucket_policy_context,
-                rd.state_machine_policy_context,
-                autoscale_update_policy])
+                rd.state_machine_policy_context])
 
         rd.state_machine_role_context = roles.create_state_machine_role(
             client=iam_client,

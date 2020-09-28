@@ -37,7 +37,9 @@ def cleanup(resource_description):
     """Cleans up all resources allocated by the :py:func:`deploy` method.
 
     Args:
-        resource_description (Namespace): [description]
+        resource_description (Namespace): the return value of a call to
+            the :py:func:`deploy` method which contains identifying
+            information for AWS resources to deallocate.
     """
     rd = resource_description.to_dict()
 

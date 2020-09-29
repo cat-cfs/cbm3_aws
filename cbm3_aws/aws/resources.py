@@ -80,6 +80,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         raise ValueError(
             "specified resource_description_path already exists: "
             f"'{resource_description_path}'")
+
     # resource description
     rd = Namespace()
     rd.uuid = get_uuid()

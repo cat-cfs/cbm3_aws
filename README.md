@@ -61,13 +61,13 @@ Example resources file
 
 ## Clean up the cluster
 
-Whether or not the cbm3_aws_deploy command executed successfully or not, the cluster, or partially allocated cluster, can be deallocated with the following command passing the `resource description file` created by the `cbm3_aws_deploy` command.
+Whether or not the cbm3_aws_deploy command executed successfully or not, the cluster, or partially allocated cluster, can be deallocated with the following command passing the `resource description file` created by the `cbm3_aws_deploy` command. 
 
 ```
 cbm3_aws_cleanup --resource_description_path .\cbm3_aws_resources.json
 ```
 
-
+**Note: This does not remove the s3 bucket named in the  `cbm3_aws_deploy` and this must be done as a separate step.**
 
 
 

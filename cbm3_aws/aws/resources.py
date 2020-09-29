@@ -42,7 +42,7 @@ def cleanup(resource_description):
     """
     rd = resource_description.to_dict()
 
-    ec2_client = boto3.client("ec2")  # region_name=region_name)
+    ec2_client = boto3.client("ec2", region_name=region_name)
     auto_scale_client = boto3.client(
         'autoscaling', region_name=rd["region_name"])
     iam_client = boto3.client("iam", region_name=rd["region_name"])

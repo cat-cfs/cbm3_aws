@@ -97,8 +97,8 @@ def create_launch_template(client, image_ami_id, instance_type,
     )
 
     return Namespace(
-        launch_template_name=response["LaunchTemplateName"],
-        launch_template_id=response["LaunchTemplateId"])
+        launch_template_name=response["LaunchTemplate"]["LaunchTemplateName"],
+        launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"])
 
 
 def create_autoscaling_group(client, launch_template_context, min_size,
@@ -118,7 +118,7 @@ def create_autoscaling_group(client, launch_template_context, min_size,
     Returns:
         object: autoscaling group context
     """
-    response = client.create_auto_scaling_group(
+    client.create_auto_scaling_group(
         AutoScalingGroupName=autoscale_group_name,
         LaunchTemplate={
             'LaunchTemplateId': launch_template_context.launch_template_id,
@@ -129,7 +129,7 @@ def create_autoscaling_group(client, launch_template_context, min_size,
         NewInstancesProtectedFromScaleIn=False
     )
     return Namespace(
-        auto_scaling_group_name=response["AutoScalingGroupName"])
+        auto_scaling_group_name=autoscale_group_name)
 
 
 def delete_autoscaling_group(client, context):

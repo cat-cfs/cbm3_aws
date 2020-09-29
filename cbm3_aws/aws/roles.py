@@ -68,7 +68,7 @@ def create_autoscaling_group_policy(client, account_number, names):
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants access for updating app autoscale group')
-    return Namespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
 def create_state_machine_policy(client, account_number, names):
@@ -120,7 +120,7 @@ def create_state_machine_policy(client, account_number, names):
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants access for state machine execution')
-    return Namespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
 def create_s3_bucket_policy(client, s3_bucket_name):
@@ -158,7 +158,7 @@ def create_s3_bucket_policy(client, s3_bucket_name):
         Description='grants basic access to a particular s3 bucket for '
                     'IAM instance role')
 
-    return Namespace(policy_arn=create_policy_response["Arn"])
+    return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
 def create_state_machine_role(client, policy_context_list):
@@ -200,8 +200,8 @@ def create_state_machine_role(client, policy_context_list):
             PolicyArn=policy_context.policy_arn)
 
     return Namespace(
-        role_arn=create_role_response["Arn"],
-        role_name=create_role_response["RoleName"])
+        role_arn=create_role_response["Role"]["Arn"],
+        role_name=create_role_response["Role"]["RoleName"])
 
 
 def create_instance_iam_role(client, policy_context_list):
@@ -245,5 +245,5 @@ def create_instance_iam_role(client, policy_context_list):
             PolicyArn=policy_context.policy_arn)
 
     return Namespace(
-        role_arn=create_role_response["Arn"],
-        role_name=create_role_response["RoleName"])
+        role_arn=create_role_response["Role"]["Arn"],
+        role_name=create_role_response["Role"]["RoleName"])

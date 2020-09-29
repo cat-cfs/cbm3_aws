@@ -9,7 +9,7 @@ def get_state_machine(cbm_run_task_activity_arn):
         "States": {
             "RunCBMTask": {
                 "Comment": "starts the CBM run task activity",
-                "Type": "activity",
+                "Type": "Task",
                 "Resource": cbm_run_task_activity_arn,
                 "HeartbeatSeconds": 60,
                 "Retry": [

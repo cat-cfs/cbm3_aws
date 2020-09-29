@@ -17,7 +17,7 @@ console_scripts = [
 
 setup(
     name="cbm3_aws",
-    version="0.3.0",
+    version="0.3.1",
     description="Scripts for running CBM3 simulations on AWS",
     keywords=["cbm-cfs3", "AWS"],
     long_description=long_description,

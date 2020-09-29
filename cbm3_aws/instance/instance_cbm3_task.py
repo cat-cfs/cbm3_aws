@@ -62,7 +62,7 @@ def run_tasks(task_message, local_working_dir, s3_interface):
 
     for task in iterate_tasks(task_message):
 
-        args_list = [{
+        args_list.append({
             "project_path": task.project_path,
             "project_simulation_id": task.simulation_id,
             "aidb_path": archive_index_path,
@@ -73,7 +73,12 @@ def run_tasks(task_message, local_working_dir, s3_interface):
             "copy_makelist_results": True,
             "dist_classes_path": disturbance_classes_path,
             "dist_rules_path": disturbance_rules_path
-        }]
+        })
+
+        # the stdout file will be created here before the inner scripts
+        # have a chance to make this dir
+        if not os.path.exists(task.tempfiles_output_dir):
+            os.makedirs(task.tempfiles_output_dir)
 
     projectsimulator.run_concurrent(
         args_list, toolbox_defaults.INSTALL_PATH)

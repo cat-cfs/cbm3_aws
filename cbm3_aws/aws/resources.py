@@ -39,7 +39,7 @@ def cleanup(resource_description):
             the :py:func:`deploy` method which contains identifying
             information for AWS resources to deallocate.
     """
-    rd = resource_description.to_dict()
+    rd = resource_description
 
     ec2_client = boto3.client("ec2", region_name=rd["region_name"])
     auto_scale_client = boto3.client(
@@ -49,26 +49,26 @@ def cleanup(resource_description):
 
     if "autoscale_group_context" in rd:
         autoscale_group.delete_autoscaling_group(
-            client=auto_scale_client, context=rd["autoscale_group_context"])
+            client=auto_scale_client, context=rd.autoscale_group_context)
     if "launch_template_context" in rd:
         autoscale_group.delete_launch_template(
-            client=ec2_client, context=rd["launch_template_context"])
+            client=ec2_client, context=rd.launch_template_context)
     if "state_machine_context" in rd:
         step_functions.cleanup(
-            client=sfn_client, arn_context=rd["state_machine_context"])
+            client=sfn_client, arn_context=rd.state_machine_context)
     if "state_machine_role_context" in rd:
         roles.delete_role(
-            client=iam_client, role_context=rd["state_machine_role_context"])
+            client=iam_client, role_context=rd.state_machine_role_context)
     if "instance_iam_role_context" in rd:
         roles.delete_role(
-            client=iam_client, role_context=rd["instance_iam_role_context"])
+            client=iam_client, role_context=rd.instance_iam_role_context)
     if "state_machine_policy_context" in rd:
         roles.delete_policy(
             client=iam_client,
-            policy_context=rd["state_machine_policy_context"])
+            policy_context=rd.state_machine_policy_context)
     if "s3_bucket_policy_context" in rd:
         roles.delete_policy(
-            client=iam_client, policy_context=rd["s3_bucket_policy_context"])
+            client=iam_client, policy_context=rd.s3_bucket_policy_context)
 
 
 def deploy(region_name, s3_bucket_name, min_instances, max_instances,

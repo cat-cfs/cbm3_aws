@@ -31,3 +31,6 @@ class Namespace(SimpleNamespace):
         for k, v in self.__dict__.items():
             output[k] = unpack(v)
         return output
+
+    def __contains__(self, key):
+        return key in self.__dict__

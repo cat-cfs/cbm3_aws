@@ -14,13 +14,12 @@ from cbm3_aws.aws.names import get_uuid
 from cbm3_aws import log_helper
 
 
-def __s3_bucket_exists(client, bucket_name):
-    bucket = client.Bucket(bucket_name)
-
-    if bucket.creation_date:
-        return True
-    else:
+def __s3_bucket_exists(s3_client, bucket_name):
+    try:
+        s3_client.head_bucket(Bucket=bucket_name)
+    except ClientError:
         return False
+    return True
 
 
 def __get_account_number(sts_client):

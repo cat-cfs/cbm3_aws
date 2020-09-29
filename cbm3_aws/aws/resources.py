@@ -116,7 +116,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
             client=iam_client, account_number=account_number, names=rd.names)
 
         logger.info("creating iam roles")
-        instance_iam_role_context = roles.create_instance_iam_role(
+        rd.instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
             policy_context_list=[
                 rd.s3_bucket_policy_context,
@@ -137,7 +137,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         rd.launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, image_ami_id=rd.image_ami_id,
             instance_type=rd.instance_type,
-            iam_instance_profile_arn=instance_iam_role_context.role_arn,
+            iam_instance_profile_arn=rd.instance_iam_role_context.role_arn,
             user_data=rd.user_data)
 
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(

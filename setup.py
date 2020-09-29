@@ -12,7 +12,7 @@ with open('requirements.txt') as f:
 console_scripts = [
     "cbm3_aws_instance = cbm3_aws.scripts.run_instance:main",
     "cbm3_aws_deploy = cbm3_aws.scripts.aws_deploy:main",
-    "cbm3_aws_cleanup = cbm3_aws.scripts.aws_cleanup.py"
+    "cbm3_aws_cleanup = cbm3_aws.scripts.aws_cleanup:main"
 ]
 
 setup(

@@ -29,9 +29,9 @@ def main():
         "--instance_type", required=True,
         help="the Amazon EC2 instance type to use (eg: 'a1.medium'")
     parser.add_argument(
-        "--resource_description_dir",
-        help="path to a writeable dir for recording information for the "
-             "allocated AWS resources", default=".")
+        "--resource_description_path", required=True,
+        help="path to a writeable filepath but not existing file path for "
+             "recording information for the allocated AWS resources")
 
     args = parser.parse_args()
 
@@ -47,8 +47,8 @@ def main():
         max_instances=args.max_instances,
         image_ami_id=args.image_ami_id,
         instance_type=args.instance_type,
-        resource_description_out_dir=os.path.abspath(
-            args.resource_description_dir))
+        resource_description_path=os.path.abspath(
+            args.resource_description_path))
 
 
 if __name__ == "__main__":

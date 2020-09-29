@@ -27,9 +27,8 @@ def __get_account_number(sts_client):
     return sts_client.get_caller_identity()["Account"]
 
 
-def __write_resources_file(resource_description, out_dir, uuid):
-    path = os.path.join(out_dir, f"aws_resources_{uuid}.json")
-    with open(path, 'w') as out_file:
+def __write_resources_file(resource_description, resource_description_path):
+    with open(resource_description_path, 'w') as out_file:
         json.dump(resource_description.to_dict(), out_file, indent=4)
 
 
@@ -74,13 +73,13 @@ def cleanup(resource_description):
 
 
 def deploy(region_name, s3_bucket_name, min_instances, max_instances,
-           image_ami_id, instance_type, resource_description_out_dir):
+           image_ami_id, instance_type, resource_description_path):
     logger = log_helper.get_logger()
 
     # resource description
     rd = Namespace()
     rd.uuid = get_uuid()
-    __write_resources_file(rd, resource_description_out_dir, rd.uuid)
+    __write_resources_file(rd, resource_description_path)
     rd.names = get_names(rd.uuid)
     rd.region_name = region_name
     rd.s3_bucket_name = s3_bucket_name
@@ -161,4 +160,4 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         else:
             raise err
     finally:
-        __write_resources_file(rd, resource_description_out_dir, rd.uuid)
+        __write_resources_file(rd, resource_description_path)

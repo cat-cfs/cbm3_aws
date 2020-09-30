@@ -12,14 +12,11 @@ def get_state_machine(cbm_run_task_activity_arn):
                 "Type": "Task",
                 "Resource": cbm_run_task_activity_arn,
                 "HeartbeatSeconds": 60,
+                "Next": "StopCBMTask",
                 "Retry": [
                     {
                         "ErrorEquals": ["States.Timeout"],
                         "Next": "DelayThenRestart"
-                    },
-                    {
-                        "ErrorEquals": ["States.ALL"],
-                        "End": True
                     }
                 ]
             },
@@ -27,6 +24,9 @@ def get_state_machine(cbm_run_task_activity_arn):
                 "Type": "Wait",
                 "Seconds": 60,
                 "Next": "RunCBMTask"
+            },
+            "StopCBMTask": {
+                "Type": "Succeed"
             }
         }
     })

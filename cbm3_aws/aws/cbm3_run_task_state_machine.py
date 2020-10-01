@@ -13,7 +13,7 @@ def get_state_machine(cbm_run_task_activity_arn):
                 "Resource": cbm_run_task_activity_arn,
                 "HeartbeatSeconds": 60,
                 "Next": "StopCBMTask",
-                "Retry": [
+                "Catch": [
                     {
                         "ErrorEquals": ["States.Timeout"],
                         "Next": "DelayThenRestart"

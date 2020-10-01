@@ -137,16 +137,15 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
             activity_arn=rd.state_machine_context.activity_arn)
 
         rd.launch_template_context = autoscale_group.create_launch_template(
-            client=ec2_client, image_ami_id=rd.image_ami_id,
-            instance_type=rd.instance_type,
+            client=ec2_client, name=rd.names.autoscale_launch_template,
+            image_ami_id=rd.image_ami_id, instance_type=rd.instance_type,
             iam_instance_profile_arn=rd.instance_iam_role_context.role_arn,
-            user_data=rd.user_data)
+            user_data=rd.user_data, )
 
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(
-            client=auto_scale_client,
+            client=auto_scale_client, name=rd.names.autoscale_group,
             launch_template_context=rd.launch_template_context,
-            min_size=rd.min_instances,
-            max_size=rd.max_instances)
+            min_size=rd.min_instances, max_size=rd.max_instances)
 
         return rd
 

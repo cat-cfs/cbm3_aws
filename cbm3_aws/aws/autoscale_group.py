@@ -16,20 +16,19 @@ def delete_launch_template(client, context):
         LaunchTemplateId=context.launch_template_id)
 
 
-def create_launch_template(client, image_ami_id, instance_type,
-                           iam_instance_profile_arn, user_data,
-                           names):
+def create_launch_template(client, name, image_ami_id, instance_type,
+                           iam_instance_profile_arn, user_data):
     """Create a launch template for provisioning instances
 
     Args:
         client (EC2.Client): boto3 ec2 client
+        name (str): the name of the launch template
         image_ami_id (str): the ami id for the launched instances
         instance_type (str): the type of the instance to launch
             (ex. 't1.micro')
         iam_instance_profile_arn (str): ARN for for the Iam instance profile
             to attach to launched instances
         user_data (str): line break seperated commands to run on instance start
-        names (namespace): the names used to label provisioned aws resources
 
     Returns:
         object: launch template context object
@@ -40,7 +39,7 @@ def create_launch_template(client, image_ami_id, instance_type,
     response = client.create_launch_template(
         DryRun=False,
         ClientToken=client_token,
-        LaunchTemplateName=names.autoscale_launch_template,
+        LaunchTemplateName=name,
         LaunchTemplateData={
             'EbsOptimized': False,
             'IamInstanceProfile': {
@@ -101,25 +100,25 @@ def create_launch_template(client, image_ami_id, instance_type,
         launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"])
 
 
-def create_autoscaling_group(client, launch_template_context, min_size,
-                             max_size, autoscale_group_name):
+def create_autoscaling_group(client, name, launch_template_context, min_size,
+                             max_size):
     """Create an autoscaling group to manage spot instances.
 
     Args:
         client (AutoScaling.Client): boto3 autoscaling client
+        name (str): the name of the autoscaling group
         launch_template_context (object): Return value of:
             :py:func:`create_launch_template`
         min_size (int): minimum number of instances to run in auto scaling
             group.
         max_size (int): maximum number of instances to run in auto scaling
             group.
-        autoscale_group_name (str): the name of the autoscaling group
 
     Returns:
         object: autoscaling group context
     """
     client.create_auto_scaling_group(
-        AutoScalingGroupName=autoscale_group_name,
+        AutoScalingGroupName=name,
         LaunchTemplate={
             'LaunchTemplateId': launch_template_context.launch_template_id,
         },
@@ -129,7 +128,7 @@ def create_autoscaling_group(client, launch_template_context, min_size,
         NewInstancesProtectedFromScaleIn=False
     )
     return Namespace(
-        auto_scaling_group_name=autoscale_group_name)
+        auto_scaling_group_name=name)
 
 
 def delete_autoscaling_group(client, context):

@@ -84,8 +84,6 @@ def cleanup(client, arn_context):
             stateMachineArn=arn_context.app_state_machine_arn)
 
 
-
-
 def start_execution(client, name, state_machine_context, tasks):
     client.start_execution(
         stateMachineArn=state_machine_context.app_state_machine_arn,

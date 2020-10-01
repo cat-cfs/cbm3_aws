@@ -89,8 +89,8 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
     rd.names = get_names(rd.uuid)
     rd.region_name = region_name
     rd.s3_bucket_name = s3_bucket_name
-    rd.min_instances = min_instances
-    rd.max_instances = max_instances
+    rd.min_instances = int(min_instances)
+    rd.max_instances = int(max_instances)
     rd.image_ami_id = image_ami_id
     rd.instance_type = instance_type
 

@@ -17,10 +17,10 @@ def main():
         help="Name of the s3 bucket that the the application will interact"
              "with")
     parser.add_argument(
-        "--min_instances", required=True,
+        "--min_instances", required=True, type=int,
         help="minimum number of instances to deploy")
     parser.add_argument(
-        "--max_instances", required=True,
+        "--max_instances", required=True, type=int,
         help="maximum number of instances to deploy")
     parser.add_argument(
         "--image_ami_id", required=True,

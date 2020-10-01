@@ -17,17 +17,19 @@ def main():
         help="Path to a json formatted file containing the allocated AWS "
              "resources to de-allocate with this script.")
 
-    args = parser.parse_args()
-
     log_helper.start_logging(level="DEBUG")
     logger = log_helper.get_logger()
-    logger.info("aws_cleanup start up")
-    logger.info(vars(args))
+    try:
+        args = parser.parse_args()
+        logger.info("aws_cleanup start up")
+        logger.info(vars(args))
 
-    path = os.path.abspath(args.resource_description_path)
-    with open(path, 'r') as fp:
-        data = Namespace(**json.load(fp))
-    resources.cleanup(resource_description=data)
+        path = os.path.abspath(args.resource_description_path)
+        with open(path, 'r') as fp:
+            data = Namespace(**json.load(fp))
+        resources.cleanup(resource_description=data)
+    except Exception:
+        logger.exception("")
 
 
 if __name__ == "__main__":

@@ -33,22 +33,26 @@ def main():
         help="path to a writeable filepath but not existing file path for "
              "recording information for the allocated AWS resources")
 
-    args = parser.parse_args()
-
     log_helper.start_logging(level="DEBUG")
     logger = log_helper.get_logger()
-    logger.info("aws_deploy start up")
-    logger.info(vars(args))
 
-    resources.deploy(
-        region_name=args.region_name,
-        s3_bucket_name=args.s3_bucket_name,
-        min_instances=args.min_instances,
-        max_instances=args.max_instances,
-        image_ami_id=args.image_ami_id,
-        instance_type=args.instance_type,
-        resource_description_path=os.path.abspath(
-            args.resource_description_path))
+    try:
+        args = parser.parse_args()
+
+        logger.info("aws_deploy start up")
+        logger.info(vars(args))
+
+        resources.deploy(
+            region_name=args.region_name,
+            s3_bucket_name=args.s3_bucket_name,
+            min_instances=args.min_instances,
+            max_instances=args.max_instances,
+            image_ami_id=args.image_ami_id,
+            instance_type=args.instance_type,
+            resource_description_path=os.path.abspath(
+                args.resource_description_path))
+    except Exception:
+        logger.exception("")
 
 
 if __name__ == "__main__":

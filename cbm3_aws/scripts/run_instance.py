@@ -18,11 +18,14 @@ def main():
         "--s3_bucket_name", required=True,
         help="Name of the s3 bucket that the instance will interact with")
 
-    args = parser.parse_args()
-    logger.info(vars(args))
+    try:
+        args = parser.parse_args()
+        logger.info(vars(args))
 
-    instance_task.run(
-        activity_arn=args.activity_arn, s3_bucket_name=args.s3_bucket_name)
+        instance_task.run(
+            activity_arn=args.activity_arn, s3_bucket_name=args.s3_bucket_name)
+    except Exception:
+        logger.exception("")
 
 
 if __name__ == "__main__":

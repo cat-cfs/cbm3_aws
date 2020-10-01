@@ -24,15 +24,24 @@ Deploy a cbm3_aws cluster from the windows command line
 ```
 cbm3_aws_deploy ^
     --region_name ca-central-1 ^
-    --s3_bucket_name my_cbm3_aws_bucket ^
+    --s3_bucket_name my-cbm3-aws-bucket ^
     --min_instances 1 ^
     --max_instances 1 ^
-    --image_ami_id ami-00000 ^
-    --instance_type i3.large ^
+    --image_ami_id ami-0c2f25c1f66a1ff4d ^
+    --instance_type t2.micro ^
     --resource_description_path .\cbm3_aws_resources.json
 ```
 
-After running this command successfully, a `cbm3_aws` cluster will have been deployed and will await tasks to run. 
+
+
+## Cleanup
+
+```
+cbm3_aws_cleanup --resource_description_path .\cbm3_aws_resources.json
+del .\cbm3_aws_resources.json
+```
+
+After running this command successfully, a `cbm3_aws` cluster will have been deployed and will await tasks to run.
 
 A *resource description file* will be created by the `cbm3_aws_deploy` command at the path specified in the command. This file contains identifying information for all resources allocated.
 
@@ -40,20 +49,40 @@ Example resources file
 
 ```json
 {
-    "uuid": "fqcgE8SBvU4WEW9NGVhVek",
+    "uuid": "<uuid>",
     "names": {
-        "run_activity": "cbm3_run_activity_fqcgE8SBvU4WEW9NGVhVek",
-        "autoscale_launch_template": "cbm3_run_launch_template_fqcgE8SBvU4WEW9NGVhVek",
-        "autoscale_group": "cbm3_autoscale_group_fqcgE8SBvU4WEW9NGVhVek",
-        "run_task_state_machine": "cbm3_run_task_state_machine_fqcgE8SBvU4WEW9NGVhVek",
-        "run_state_machine": "cbm3_run_state_machine_fqcgE8SBvU4WEW9NGVhVek"
+        "run_activity": "cbm3_run_activity_<uuid>",
+        "autoscale_launch_template": "cbm3_run_launch_template_<uuid>",
+        "autoscale_group": "cbm3_autoscale_group_<uuid>",
+        "run_task_state_machine": "cbm3_run_task_state_machine_<uuid>",
+        "run_state_machine": "cbm3_run_state_machine_<uuid>"
     },
     "region_name": "ca-central-1",
-    "s3_bucket_name": "my_cbm3_aws_bucket",
-    "min_instances": "1",
-    "max_instances": "1",
-    "image_ami_id": "ami-00000",
-    "instance_type": "i3.large"
+    "s3_bucket_name": "my-cbm3-aws-bucket",
+    "min_instances": 1,
+    "max_instances": 1,
+    "image_ami_id": "ami-0c2f25c1f66a1ff4d",
+    "instance_type": "t2.micro",
+    "s3_bucket_policy_context": {
+        "policy_arn": "arn:aws:iam::<account#>:policy/cbm3_s3_instance_policy"
+    },
+    "state_machine_policy_context": {
+        "policy_arn": "arn:aws:iam::<account#>:policy/cbm3_state_machine_policy"
+    },
+    "instance_iam_role_context": {
+        "role_arn": "arn:aws:iam::<account#>:role/cbm3_instance_iam_role",
+        "role_name": "cbm3_instance_iam_role"
+    },
+    "state_machine_role_context": {
+        "role_arn": "arn:aws:iam::<account#>:role/cbm3_state_machine_role",
+        "role_name": "cbm3_state_machine_role"
+    },
+    "state_machine_context": {
+        "activity_arn": "arn:aws:states:ca-central-1:<account#>:activity:cbm3_run_activity_<uuid>",
+        "task_state_machine_arn": "arn:aws:states:ca-central-1:<account#>:stateMachine:cbm3_run_task_state_machine_<uuid>",
+        "app_state_machine_arn": "arn:aws:states:ca-central-1:<account#>:stateMachine:cbm3_run_state_machine_<uuid>"
+    },
+    "user_data": "<script><app_run_command></script>"
 }
 ```
 
@@ -61,13 +90,15 @@ Example resources file
 
 ## Clean up the cluster
 
-Whether or not the cbm3_aws_deploy command executed successfully or not, the cluster, or partially allocated cluster, can be deallocated with the following command passing the `resource description file` created by the `cbm3_aws_deploy` command. 
+Whether or not the cbm3_aws_deploy command executed successfully or not, the cluster, or partially allocated cluster, can be deallocated with the following command passing the `resource description file` created by the `cbm3_aws_deploy` command.
 
 ```
 cbm3_aws_cleanup --resource_description_path .\cbm3_aws_resources.json
 ```
 
+If the above command runs successfully the resource file is no longer needed:
+```
+del .\cbm3_aws_resources.json
+```
+
 **Note: This does not remove the s3 bucket named in the  `cbm3_aws_deploy` and this must be done as a separate step.**
-
-
-

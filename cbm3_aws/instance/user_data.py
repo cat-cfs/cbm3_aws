@@ -1,3 +1,5 @@
+import base64
+
 
 def create_userdata(activity_arn, s3_bucket_name):
     """Creates the script to run at the start of each instance worker,
@@ -20,4 +22,5 @@ def create_userdata(activity_arn, s3_bucket_name):
         # "shutdown /s",
         "</script>"
     ]
-    return "\n".join(commands)
+    userdata = "\n".join(commands)
+    return base64.b64encode(userdata.encode()).decode("ascii")

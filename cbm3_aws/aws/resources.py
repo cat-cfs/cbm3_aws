@@ -115,7 +115,8 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         account_number = __get_account_number(sts_client)
         logger.info("creating policies")
         rd.s3_bucket_policy_context = roles.create_s3_bucket_policy(
-            client=iam_client, s3_bucket_name=rd.s3_bucket_name)
+            client=iam_client, s3_bucket_name=rd.s3_bucket_name,
+            names=rd.names)
         rd.state_machine_policy_context = roles.create_state_machine_policy(
             client=iam_client, account_number=account_number, names=rd.names)
 

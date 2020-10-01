@@ -51,50 +51,6 @@ def delete_policy(client, policy_context):
         PolicyArn=policy_context.policy_arn)
 
 
-def create_autoscaling_group_policy(client, account_number, names):
-    """Create policy to allow updating autoscale group
-
-    Args:
-        client (IAM.client): boto3 IAM client
-        account_number (str): the AWS account number for filtering permitted
-            resources
-        names (namespace): the names used to label provisioned aws resources
-
-    Returns:
-        namespace: object containing the policy ARN
-    """
-    resource_string = \
-        "arn:aws:autoscaling:*:" \
-        f"{account_number}:autoScalingGroup:*" \
-        f":autoScalingGroupName/{names.autoscale_group}"
-
-    policy = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "VisualEditor0",
-                "Effect": "Allow",
-                "Action": [
-                    "autoscaling:UpdateAutoScalingGroup"
-                ],
-                "Resource": resource_string
-            },
-            {
-                "Sid": "VisualEditor1",
-                "Effect": "Allow",
-                "Action": "autoscaling:DescribeAutoScalingGroups",
-                "Resource": "*"
-            }
-        ]
-    }
-    create_policy_response = client.create_policy(
-        PolicyName='cbm3_autoscale_update_policy',
-        Path='/',
-        PolicyDocument=json.dumps(policy),
-        Description='grants access for updating app autoscale group')
-    return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
-
-
 def create_state_machine_policy(client, account_number, names):
     """Create a state machine policy to allow state machine function
 
@@ -140,14 +96,14 @@ def create_state_machine_policy(client, account_number, names):
         ]
     }
     create_policy_response = client.create_policy(
-        PolicyName='cbm3_state_machine_policy',
+        PolicyName=names.state_machine_policy,
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants access for state machine execution')
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
-def create_s3_bucket_policy(client, s3_bucket_name):
+def create_s3_bucket_policy(client, s3_bucket_name, names):
     """Create a policy object for permitting put/get/delete operations on the
     specified named bucket
 
@@ -155,6 +111,7 @@ def create_s3_bucket_policy(client, s3_bucket_name):
         client (IAM.client): boto3 IAM client
         s3_bucket_name (str): the name of the bucket for which to assign the
             policy
+        names (namespace): the names used to label provisioned aws resources
 
     Returns:
         namespace: a namespace containing the policy ARN
@@ -176,7 +133,7 @@ def create_s3_bucket_policy(client, s3_bucket_name):
     }
 
     create_policy_response = client.create_policy(
-        PolicyName='cbm3_s3_instance_policy',
+        PolicyName=names.instance_s3_policy,
         Path='/',
         PolicyDocument=json.dumps(policy),
         Description='grants basic access to a particular s3 bucket for '

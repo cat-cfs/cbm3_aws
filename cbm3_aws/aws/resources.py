@@ -69,7 +69,8 @@ def cleanup(resource_description):
         roles.delete_role(
             client=iam_client, role_context=rd.state_machine_role_context)
     if "instance_iam_role_context" in rd:
-        roles.delete_instance_profile(client=iam_client, rd.instance_iam_role_context)
+        roles.delete_instance_profile(
+            client=iam_client, role_context=rd.instance_iam_role_context)
         roles.delete_role(
             client=iam_client, role_context=rd.instance_iam_role_context)
 
@@ -139,10 +140,12 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
             s3_bucket_name=rd.s3_bucket_name,
             activity_arn=rd.state_machine_context.activity_arn)
 
+        iam_instance_profile_arn = \
+            rd.instance_iam_role_context.instance_profile_arn
         rd.launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, name=rd.names.autoscale_launch_template,
             image_ami_id=rd.image_ami_id, instance_type=rd.instance_type,
-            iam_instance_profile_arn=rd.instance_iam_role_context.role_arn,
+            iam_instance_profile_arn=iam_instance_profile_arn,
             user_data=rd.user_data)
 
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(

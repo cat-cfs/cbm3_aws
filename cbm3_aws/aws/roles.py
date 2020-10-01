@@ -11,7 +11,8 @@ def delete_role(client, role_context):
         role_context (namespace): object containing identifying information
             for the role to delete.
     """
-    list_role_response = client.list_role_policies(role_context.role_name)
+    list_role_response = client.list_role_policies(
+        RoleName=role_context.role_name)
     for attached_policy_name in list_role_response["PolicyNames"]:
         client.delete_role_policy(
             RoleName=role_context.role_name,

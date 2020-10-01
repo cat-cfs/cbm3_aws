@@ -12,7 +12,10 @@ def get_names(uuid):
         autoscale_launch_template=f"cbm3_run_launch_template_{uuid}",
         autoscale_group=f"cbm3_autoscale_group_{uuid}",
         run_task_state_machine=f"cbm3_run_task_state_machine_{uuid}",
-        run_state_machine=f"cbm3_run_state_machine_{uuid}")
+        run_state_machine=f"cbm3_run_state_machine_{uuid}",
+        state_machine_role=f"cbm3_state_machine_role_{uuid}",
+        instance_iam_role=f"cbm3_iam_instance_role_{uuid}",
+        iam_instance_profile=f"cbm3_iam_instance_profile_{uuid}")
 
 
 def get_step_functions_executions_name(uuid):

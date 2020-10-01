@@ -2,6 +2,23 @@ import json
 from cbm3_aws.namespace import Namespace
 
 
+def delete_instance_profile(client, role_context):
+    """Removes the AWS instance profile which is necessary before deleting the
+    instance role.
+
+    Args:
+        client (IAM.client): boto3 IAM client
+        role_context (namespace): object containing identifying information
+            for the role and instance profile to delete.
+    """
+    client.remove_role_from_instance_profile(
+        InstanceProfileName=role_context.instance_profile_name,
+        RoleName=role_context.role_name)
+
+    client.delete_instance_profile(
+        InstanceProfileName=role_context.instance_profile_name)
+
+
 def delete_role(client, role_context):
     """delete the role based on the role name/ARN specified in
     role_context
@@ -168,19 +185,20 @@ def create_s3_bucket_policy(client, s3_bucket_name):
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
-def create_state_machine_role(client, policy_context_list):
+def create_state_machine_role(client, policy_context_list, names):
     """Create an state machine IAM role
 
     Args:
         client (IAM.client): boto3 IAM client
         policy_context_list (list): list of objects containing the
             policy ARN to assign to the state machine IAM role.
+        names (namespace): the names used to label provisioned aws resources
 
     Returns:
         namespace: context object containing the IAM role's identifying
             information
     """
-    role_name = "cbm3_state_machine_role"
+
     states_assume_role_policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -196,14 +214,14 @@ def create_state_machine_role(client, policy_context_list):
 
     create_role_response = client.create_role(
         Path='/',
-        RoleName=role_name,
+        RoleName=names.state_machine_role,
         AssumeRolePolicyDocument=json.dumps(states_assume_role_policy),
         Description='grants ec2 instances read and write permission to '
                     'specific bucket')
 
     for policy_context in policy_context_list:
         client.attach_role_policy(
-            RoleName=role_name,
+            RoleName=names.state_machine_role,
             PolicyArn=policy_context.policy_arn)
 
     return Namespace(
@@ -211,19 +229,19 @@ def create_state_machine_role(client, policy_context_list):
         role_name=create_role_response["Role"]["RoleName"])
 
 
-def create_instance_iam_role(client, policy_context_list):
+def create_instance_iam_role(client, policy_context_list, names):
     """Create an instance IAM role
 
     Args:
         client (IAM.client): boto3 IAM client
         policy_context_list (list): list of objects containing the
             policy ARN to assign to the instance IAM role.
+        names (namespace): the names used to label provisioned aws resources
 
     Returns:
-        namespace: context object containing the IAM role's identifying
-            information
+        namespace: context object containing the identifying
+            information belonging to the IAM role and Instance profile
     """
-    role_name = "cbm3_instance_iam_role"
 
     ec2_assume_role_policy = {
         "Version": "2012-10-17",
@@ -240,7 +258,7 @@ def create_instance_iam_role(client, policy_context_list):
 
     create_role_response = client.create_role(
         Path='/',
-        RoleName=role_name,
+        RoleName=names.instance_iam_role,
         AssumeRolePolicyDocument=json.dumps(ec2_assume_role_policy),
         Description='grants ec2 instances read and write permission to '
                     'specific bucket, state machine access, and autoscale '
@@ -248,9 +266,22 @@ def create_instance_iam_role(client, policy_context_list):
 
     for policy_context in policy_context_list:
         client.attach_role_policy(
-            RoleName=role_name,
+            RoleName=names.instance_iam_role,
             PolicyArn=policy_context.policy_arn)
+
+    create_instance_profile_response = client.create_instance_profile(
+        InstanceProfileName=names.iam_instance_profile)
+
+    client.add_role_to_instance_profile(
+        InstanceProfileName=names.iam_instance_profile,
+        RoleName=names.instance_iam_role)
 
     return Namespace(
         role_arn=create_role_response["Role"]["Arn"],
-        role_name=create_role_response["Role"]["RoleName"])
+        role_name=create_role_response["Role"]["RoleName"],
+        instance_profile_name=create_instance_profile_response[
+            "InstanceProfile"]["InstanceProfileName"],
+        instance_profile_id=create_instance_profile_response[
+            "InstanceProfile"]["InstanceProfileId"],
+        instance_profile_arn=create_instance_profile_response[
+            "InstanceProfile"]["Arn"])

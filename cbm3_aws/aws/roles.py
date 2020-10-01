@@ -11,12 +11,6 @@ def delete_role(client, role_context):
         role_context (namespace): object containing identifying information
             for the role to delete.
     """
-    list_role_response = client.list_role_policies(
-        RoleName=role_context.role_name)
-    for attached_policy_name in list_role_response["PolicyNames"]:
-        client.delete_role_policy(
-            RoleName=role_context.role_name,
-            PolicyName=attached_policy_name)
     client.delete_role(RoleName=role_context.role_name)
 
 
@@ -29,6 +23,13 @@ def delete_policy(client, policy_context):
         policy_context (namespace): object containing the ARN for the policy
             to delete.
     """
+    list_entities_for_policy_response = client.list_entities_for_policy(
+        PolicyArn=policy_context.policy_arn,
+        EntityFilter="Role")
+    for role in list_entities_for_policy_response["PolicyRoles"]:
+        client.detach_role_policy(
+            RoleName=role["RoleName"],
+            PolicyArn=policy_context.policy_arn)
     client.delete_policy(
         PolicyArn=policy_context.policy_arn)
 

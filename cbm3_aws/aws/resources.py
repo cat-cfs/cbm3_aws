@@ -41,11 +41,11 @@ def cleanup(resource_description):
     """
     rd = resource_description
 
-    ec2_client = boto3.client("ec2", region_name=rd["region_name"])
+    ec2_client = boto3.client("ec2", region_name=rd.region_name)
     auto_scale_client = boto3.client(
-        'autoscaling', region_name=rd["region_name"])
-    iam_client = boto3.client("iam", region_name=rd["region_name"])
-    sfn_client = boto3.client('stepfunctions', region_name=rd["region_name"])
+        'autoscaling', region_name=rd.region_name)
+    iam_client = boto3.client("iam", region_name=rd.region_name)
+    sfn_client = boto3.client('stepfunctions', region_name=rd.region_name)
 
     if "autoscale_group_context" in rd:
         autoscale_group.delete_autoscaling_group(

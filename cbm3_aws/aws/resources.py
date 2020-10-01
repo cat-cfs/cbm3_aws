@@ -56,12 +56,7 @@ def cleanup(resource_description):
     if "state_machine_context" in rd:
         step_functions.cleanup(
             client=sfn_client, arn_context=rd.state_machine_context)
-    if "state_machine_role_context" in rd:
-        roles.delete_role(
-            client=iam_client, role_context=rd.state_machine_role_context)
-    if "instance_iam_role_context" in rd:
-        roles.delete_role(
-            client=iam_client, role_context=rd.instance_iam_role_context)
+
     if "state_machine_policy_context" in rd:
         roles.delete_policy(
             client=iam_client,
@@ -69,6 +64,13 @@ def cleanup(resource_description):
     if "s3_bucket_policy_context" in rd:
         roles.delete_policy(
             client=iam_client, policy_context=rd.s3_bucket_policy_context)
+
+    if "state_machine_role_context" in rd:
+        roles.delete_role(
+            client=iam_client, role_context=rd.state_machine_role_context)
+    if "instance_iam_role_context" in rd:
+        roles.delete_role(
+            client=iam_client, role_context=rd.instance_iam_role_context)
 
 
 def deploy(region_name, s3_bucket_name, min_instances, max_instances,

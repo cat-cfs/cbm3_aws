@@ -32,16 +32,9 @@ cbm3_aws_deploy ^
     --resource_description_path .\cbm3_aws_resources.json
 ```
 
-
-
-## Cleanup
-
-```
-cbm3_aws_cleanup --resource_description_path .\cbm3_aws_resources.json
-del .\cbm3_aws_resources.json
-```
-
 After running this command successfully, a `cbm3_aws` cluster will have been deployed and will await tasks to run.
+
+## Resource Description File
 
 A *resource description file* will be created by the `cbm3_aws_deploy` command at the path specified in the command. This file contains identifying information for all resources allocated.
 
@@ -97,6 +90,7 @@ cbm3_aws_cleanup --resource_description_path .\cbm3_aws_resources.json
 ```
 
 If the above command runs successfully the resource file is no longer needed:
+
 ```
 del .\cbm3_aws_resources.json
 ```

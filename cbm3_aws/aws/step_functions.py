@@ -57,29 +57,33 @@ def create_state_machines(client, role_arn,
         namespace: context object containing AWS state machine identifying
             information
     """
-
-    activity_arn = _create_worker_activity(client=client, names=names)
-    task_state_machine_arn = _create_task_state_machine(
-        client=client, worker_activity_resource_arn=activity_arn,
+    ctx = Namespace()
+    ctx.activity_arn = _create_worker_activity(
+        client=client, names=names)
+    ctx.task_state_machine_arn = _create_task_state_machine(
+        client=client, worker_activity_resource_arn=ctx.activity_arn,
         role_arn=role_arn, names=names)
-    app_state_machine_arn = _create_application_state_machine(
-        client=client, task_state_machine_arn=task_state_machine_arn,
-        role_arn=role_arn, max_concurrency=max_concurrency, names=names)
-    state_machine_context = Namespace(
-        client=client, activity_arn=activity_arn,
-        task_state_machine_arn=task_state_machine_arn,
-        app_state_machine_arn=app_state_machine_arn)
-    return state_machine_context
+    ctx.app_state_machine_arn = \
+        _create_application_state_machine(
+            client=client, task_state_machine_arn=ctx.task_state_machine_arn,
+            role_arn=role_arn, max_concurrency=max_concurrency, names=names)
+
+    return ctx
 
 
 def cleanup(client, arn_context):
 
-    client.delete_state_machine(
-        stateMachineArn=arn_context.app_state_machine_arn)
-    client.delete_state_machine(
-        stateMachineArn=arn_context.task_state_machine_arn)
-    client.delete_activity(
-        activityArn=arn_context.activity_arn)
+    if "activity_arn" in arn_context:
+        client.delete_activity(
+            activityArn=arn_context.activity_arn)
+    if "task_state_machine_arn" in arn_context:
+        client.delete_state_machine(
+            stateMachineArn=arn_context.task_state_machine_arn)
+    if "app_state_machine_arn" in arn_context:
+        client.delete_state_machine(
+            stateMachineArn=arn_context.app_state_machine_arn)
+
+
 
 
 def start_execution(client, name, state_machine_context, tasks):

@@ -34,8 +34,7 @@ def create_launch_template(client, name, image_ami_id, instance_type,
         object: launch template context object
     """
     client_token = str(uuid.uuid4())
-    spot_request_valid_date = \
-        datetime.datetime.today() + datetime.timedelta(days=7)
+
     response = client.create_launch_template(
         DryRun=False,
         ClientToken=client_token,
@@ -77,7 +76,6 @@ def create_launch_template(client, name, image_ami_id, instance_type,
                 'SpotOptions': {
                     # 'MaxPrice': 'string', # up to the default on-demand price
                     'SpotInstanceType': 'one-time',
-                    'ValidUntil': spot_request_valid_date,
                     'InstanceInterruptionBehavior': 'terminate'
                 }
             }

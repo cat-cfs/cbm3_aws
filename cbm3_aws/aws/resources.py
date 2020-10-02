@@ -39,8 +39,10 @@ def cleanup(resource_description):
             the :py:func:`deploy` method which contains identifying
             information for AWS resources to deallocate.
     """
+    logger = log_helper.get_logger()
     rd = resource_description
 
+    logger.info("connecting")
     ec2_client = boto3.client("ec2", region_name=rd.region_name)
     auto_scale_client = boto3.client(
         'autoscaling', region_name=rd.region_name)
@@ -48,15 +50,19 @@ def cleanup(resource_description):
     sfn_client = boto3.client('stepfunctions', region_name=rd.region_name)
 
     if "autoscale_group_context" in rd:
+        logger.info("drop autoscale group")
         autoscale_group.delete_autoscaling_group(
             client=auto_scale_client, context=rd.autoscale_group_context)
     if "launch_template_context" in rd:
+        logger.info("drop launch template")
         autoscale_group.delete_launch_template(
             client=ec2_client, context=rd.launch_template_context)
     if "state_machine_context" in rd:
+        logger.info("drop state machine")
         step_functions.cleanup(
             client=sfn_client, arn_context=rd.state_machine_context)
 
+    logger.info("drop policies")
     if "state_machine_policy_context" in rd:
         roles.delete_policy(
             client=iam_client,
@@ -65,6 +71,7 @@ def cleanup(resource_description):
         roles.delete_policy(
             client=iam_client, policy_context=rd.s3_bucket_policy_context)
 
+    logger.info("drop roles")
     if "state_machine_role_context" in rd:
         roles.delete_role(
             client=iam_client, role_context=rd.state_machine_role_context)
@@ -97,7 +104,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
     rd.instance_type = instance_type
 
     try:
-
+        logger.info("connecting")
         s3_client = boto3.client("s3", region_name=rd.region_name)
         ec2_client = boto3.client("ec2", region_name=rd.region_name)
         auto_scale_client = boto3.client(
@@ -106,8 +113,9 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         sts_client = boto3.client("sts", region_name=rd.region_name)
         sfn_client = boto3.client('stepfunctions', region_name=rd.region_name)
 
+        logger.info("check if bucket exists")
         if not __s3_bucket_exists(s3_client, rd.s3_bucket_name):
-            logger.info(f"creating s3 bucked {rd.s3_bucket_name}")
+            logger.info(f"creating s3 bucket {rd.s3_bucket_name}")
             s3_bucket.create_bucket(
                 client=s3_client, bucket_name=rd.s3_bucket_name,
                 region=rd.region_name)
@@ -128,31 +136,43 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
                 rd.state_machine_policy_context],
             names=rd.names)
 
+        logger.info("creating state machine role")
         rd.state_machine_role_context = roles.create_state_machine_role(
             client=iam_client,
             policy_context_list=[rd.state_machine_policy_context],
             names=rd.names)
 
+        logger.info("creating state machine")
         rd.state_machine_context = step_functions.create_state_machines(
             client=sfn_client, role_arn=rd.state_machine_role_context.role_arn,
             max_concurrency=rd.max_instances, names=rd.names)
 
+        logger.info("creating userdata")
         rd.user_data = create_userdata(
             s3_bucket_name=rd.s3_bucket_name,
             activity_arn=rd.state_machine_context.activity_arn)
 
+        logger.info("creating iam instance profile")
         iam_instance_profile_arn = \
             rd.instance_iam_role_context.instance_profile_arn
+
+        logger.info("creating launch template")
         rd.launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, name=rd.names.autoscale_launch_template,
             image_ami_id=rd.image_ami_id, instance_type=rd.instance_type,
             iam_instance_profile_arn=iam_instance_profile_arn,
             user_data=rd.user_data)
 
+        logger.info("getting availability zones")
+        availability_zones = autoscale_group.get_availability_zones(
+            client=ec2_client)
+        logger.info(f"using zones: {availability_zones}")
+        logger.info(f"create autoscaling group")
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(
             client=auto_scale_client, name=rd.names.autoscale_group,
             launch_template_context=rd.launch_template_context,
-            min_size=rd.min_instances, max_size=rd.max_instances)
+            min_size=rd.min_instances, max_size=rd.max_instances,
+            availability_zones=availability_zones)
 
         return rd
 

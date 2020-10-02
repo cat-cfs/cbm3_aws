@@ -17,7 +17,7 @@ def main():
         help="Path to a json formatted file containing the allocated AWS "
              "resources to de-allocate with this script.")
 
-    log_helper.start_logging(level="DEBUG")
+    log_helper.start_logging(level="INFO")
     logger = log_helper.get_logger()
     try:
         args = parser.parse_args()

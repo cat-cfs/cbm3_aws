@@ -1,5 +1,4 @@
 import uuid
-import datetime
 from cbm3_aws.namespace import Namespace
 
 

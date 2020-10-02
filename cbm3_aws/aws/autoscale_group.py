@@ -100,8 +100,14 @@ def create_launch_template(client, name, image_ami_id, instance_type,
         launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"])
 
 
+def get_availability_zones(client):
+    describe_availability_zones_response = client.describe_availability_zones()
+    zones = describe_availability_zones_response["AvailabilityZones"]
+    return [zone["ZoneName"] for zone in zones if zone["State"] == "available"]
+
+
 def create_autoscaling_group(client, name, launch_template_context, min_size,
-                             max_size):
+                             max_size, availability_zones):
     """Create an autoscaling group to manage spot instances.
 
     Args:
@@ -113,6 +119,8 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
             group.
         max_size (int): maximum number of instances to run in auto scaling
             group.
+        availability_zones (list): the list of availability zones for the
+            autoscaling group.
 
     Returns:
         object: autoscaling group context

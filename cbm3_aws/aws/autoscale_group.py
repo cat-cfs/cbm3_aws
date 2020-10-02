@@ -133,7 +133,8 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
         MinSize=min_size,
         MaxSize=max_size,
         TerminationPolicies=["NewestInstance"],
-        NewInstancesProtectedFromScaleIn=False
+        NewInstancesProtectedFromScaleIn=False,
+        AvailabilityZones=availability_zones
     )
     return Namespace(
         auto_scaling_group_name=name)

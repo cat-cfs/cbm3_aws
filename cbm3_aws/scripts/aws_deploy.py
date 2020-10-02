@@ -33,7 +33,7 @@ def main():
         help="path to a writeable filepath but not existing file path for "
              "recording information for the allocated AWS resources")
 
-    log_helper.start_logging(level="DEBUG")
+    log_helper.start_logging(level="INFO")
     logger = log_helper.get_logger()
 
     try:

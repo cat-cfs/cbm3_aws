@@ -227,10 +227,10 @@ def create_instance_iam_role(client, policy_context_list, names):
             PolicyArn=policy_context.policy_arn)
 
     create_instance_profile_response = client.create_instance_profile(
-        InstanceProfileName=names.iam_instance_profile)
+        InstanceProfileName=names.instance_iam_role)
 
     client.add_role_to_instance_profile(
-        InstanceProfileName=names.iam_instance_profile,
+        InstanceProfileName=names.instance_iam_role,
         RoleName=names.instance_iam_role)
 
     return Namespace(

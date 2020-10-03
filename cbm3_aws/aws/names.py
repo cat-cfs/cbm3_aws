@@ -16,8 +16,7 @@ def get_names(uuid):
         state_machine_policy=f"cbm3_state_machine_policy_{uuid}",
         state_machine_role=f"cbm3_state_machine_role_{uuid}",
         instance_s3_policy=f"cbm3_s3_instance_policy_{uuid}",
-        instance_iam_role=f"cbm3_iam_instance_role_{uuid}",
-        iam_instance_profile=f"cbm3_iam_instance_profile_{uuid}")
+        instance_iam_role=f"cbm3_iam_instance_role_{uuid}")
 
 
 def get_step_functions_executions_name(uuid):

@@ -98,9 +98,30 @@ def create_launch_template(client, name, image_ami_id, instance_type,
 
 
 def get_availability_zones(client):
+    """Gets the all availability zones that have at least one default subnet
+
+    TODO: check if there a better way to handle this?
+
+    Args:
+        client (EC2.Client): boto3 ec2 client
+
+    Returns:
+        list: list of strings naming the matching zones for the current region
+    """
     describe_availability_zones_response = client.describe_availability_zones()
     zones = describe_availability_zones_response["AvailabilityZones"]
-    return [zone["ZoneName"] for zone in zones if zone["State"] == "available"]
+    available_zones = [
+        zone["ZoneName"] for zone in zones if zone["State"] == "available"]
+
+    describe_subnets_response = client.describe_subnets(
+        Filters=[
+            {'Name': 'default-for-az',
+             'Values': ['true']}])
+    available_zones_with_subnet = []
+    for subnet in describe_subnets_response["Subnets"]:
+        if subnet["AvailabilityZone"] in available_zones:
+            available_zones_with_subnet.append(subnet["AvailabilityZone"])
+    return available_zones_with_subnet
 
 
 def create_autoscaling_group(client, name, launch_template_context, min_size,

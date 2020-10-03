@@ -98,7 +98,7 @@ def create_launch_template(client, name, image_ami_id, instance_type,
 
 
 def get_availability_zones(client):
-    """Gets the the first availability zone.
+    """Gets the all availability zones that have at least one default subnet
 
     TODO: check if there a better way to handle this?
 
@@ -112,7 +112,16 @@ def get_availability_zones(client):
     zones = describe_availability_zones_response["AvailabilityZones"]
     available_zones = [
         zone["ZoneName"] for zone in zones if zone["State"] == "available"]
-    return [available_zones[0]]
+
+    describe_subnets_response = client.describe_subnets(
+        Filters=[
+            {'Name': 'default-for-az',
+             'Values': ['true']}])
+    available_zones_with_subnet = []
+    for subnet in describe_subnets_response["Subnets"]:
+        if subnet["AvailabilityZone"] in available_zones:
+            available_zones_with_subnet.append(subnet["AvailabilityZone"])
+    return available_zones_with_subnet
 
 
 def create_autoscaling_group(client, name, launch_template_context, min_size,

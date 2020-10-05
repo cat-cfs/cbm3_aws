@@ -1,5 +1,12 @@
+import json
+import boto3
+from cbm3_aws.namespace import Namespace
 
-def execute_tasks():
-    step_functions.start_execution(
-        client=sfn_client, name=names.step_functions_execution,
-        state_machine_context=state_machine_context, tasks=tasks)
+
+def start_execution(execution_name, state_machine_arn, region_name, tasks):
+    sfn_client = boto3.client('stepfunctions', region_name=region_name)
+
+    start_execution_response = sfn_client.start_execution(
+        stateMachineArn=state_machine_arn,
+        name=execution_name,
+        input=json.dumps(tasks))

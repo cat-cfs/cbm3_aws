@@ -1,4 +1,3 @@
-import json
 from cbm3_aws.aws import cbm3_run_task_state_machine
 from cbm3_aws.aws import cbm3_run_state_machine
 from cbm3_aws.namespace import Namespace
@@ -82,10 +81,3 @@ def cleanup(client, arn_context):
     if "app_state_machine_arn" in arn_context:
         client.delete_state_machine(
             stateMachineArn=arn_context.app_state_machine_arn)
-
-
-def start_execution(client, name, state_machine_context, tasks):
-    client.start_execution(
-        stateMachineArn=state_machine_context.app_state_machine_arn,
-        name=name,
-        input=json.dumps(tasks))

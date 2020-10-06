@@ -25,12 +25,7 @@ Dism /online /enable-feature:NetFX3 /All /Source:X:\sources\sxs
 ## MS Access driver
 
 
-
-Since it's unclear that this has a permanent download link, it is included in the instance resources dir
-
-
-
-https://www.microsoft.com/en-ca/download/confirmation.aspx?id=13255&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1
+https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine_X64.exe
 
 
 

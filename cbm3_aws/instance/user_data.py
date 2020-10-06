@@ -15,12 +15,12 @@ def create_userdata(activity_arn, s3_bucket_name):
         f"--s3_bucket_name {s3_bucket_name}"
 
     commands = [
-        "<script>",
+        "<powershell>",
         "pip install git+https://github.com/cat-cfs/cbm3_python",
         "pip install git+https://github.com/cat-cfs/cbm3_aws",
         instance_run_script_command,
         # "shutdown /s",
-        "</script>"
+        "</powershell>"
     ]
     userdata = "\n".join(commands)
     return base64.b64encode(userdata.encode()).decode("ascii")

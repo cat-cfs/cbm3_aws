@@ -1,39 +1,8 @@
 import os
+import json
+import base64
 from urllib import request
 from io import BytesIO
-
-
-SOFTWARE_LIST = [
-    {
-        "name": "python",
-        "url": "https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe",
-        "file_name": "python-3.9.0-amd64.exe",
-        "install_command": [
-            "python-3.9.0-amd64.exe", "/quiet", "InstallAllUsers=1",
-            "PrependPath=1", "Include_test=0"]
-    },
-    {
-        "name": "MS Access driver",
-        "url": "https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine_X64.exe",
-        "file_name": "AccessDatabaseEngine_X64.exe",
-        "install_command": ["AccessDatabaseEngine_X64.exe", "/quiet"]
-    }
-
-]
-
-instance_commands = [
-    "Read-S3Object -BucketName cat-cfs -Key instance_prep/software.zip ~\software.zip",
-    "Expand-Archive -LiteralPath ~\software.zip -DestinationPath ~\software",
-    "DISM /Online /Enable-Feature:NetFx3 /All"
-    'Start-Process -FilePath ~\software\python-3.9.0-amd64.exe -ArgumentList "/quiet TargetDir=c:\python InstallAllUsers=1 PrependPath=1 Include_test=0" -NoNewWindow -Wait',
-    'Start-Process -FilePath C:\users\Administrator\software\AccessDatabaseEngine_X64.exe -ArgumentList "/quiet" -NoNewWindow -Wait',
-    '[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python")',
-    '[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python\scripts")'
-    'pip install C:\Users\Administrator\Downloads\numpy-1.19.2+mkl-cp38-cp38-win_amd64.whl'
-    'pip install C:\Users\Administrator\Desktop\cbm3_python-0.6.7-py3-none-any.whl'
-    'pip install ?cbm3_aws.whl'
-    'C:\ProgramData\Amazon\EC2-Windows\Launch\Scripts\InitializeInstance.ps1 –Schedule'
-]
 
 
 def download_file(url, local_file_path):
@@ -45,15 +14,63 @@ def download_file(url, local_file_path):
 def upload_to_s3(s3_interface, local_software_dir):
     s3_interface.upload_compressed(
         key_name_prefix="instance_prep",
-        document_name="software",
+        document_name="instance_software",
         local_path=local_software_dir)
 
 
-def process_files(s3_interface, local_software_dir, software_list):
-    for software in software_list:
+def load_software_list():
+    software_list_path = os.path.join(
+        get_local_dir(), "instance_prep_software.json")
+    with open(software_list_path) as software_list_file:
+        return json.load(software_list_file)["software_list"]
+
+
+def process_files(s3_interface, local_software_dir):
+    for software in load_software_list():
         download_file(
             url=software["url"],
             local_file_path=os.path.join(
                 local_software_dir, software["file_name"]))
 
     upload_to_s3(s3_interface, local_software_dir)
+
+
+def get_local_dir():
+    """Gets the directory containing this script
+    Returns:
+        str: full path to the the script's directory
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def get_userdata(bucket_name, base64_encode=False):
+    """Returns a string, optionally base64 encoded to be run in the user-data
+    field of an EC2 instance in order to prepare the OS for running CBM3 and a
+    cbm3_aws worker script
+
+    Args:
+        bucket_name (str): name of bucket from which the instance can download
+            the required software.
+        base64_encode (bool, optional): If set to true the returned string is base64
+            encoded. Defaults to False.
+
+    Returns:
+        str: the user data script
+    """
+    ps1_script_path = os.path.join(get_local_dir(), "instance_prep.ps1")
+    ps1_variables = [
+        f'Set-Variable "s3bucket" -Value "{bucket_name}"'
+    ]
+    with open(ps1_script_path) as ps1_script_file:
+        ps1_script = ps1_script_file.read()
+
+    user_data_script = '\n'.join([
+        '<powershell>'
+        '\n'.join(ps1_variables),
+        ps1_script,
+        '</powershell>'
+    ])
+
+    if base64_encode:
+        return base64.b64encode(user_data_script.encode()).decode("ascii")
+    return user_data_script

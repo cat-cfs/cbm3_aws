@@ -1,6 +1,5 @@
 import os
 
-from cbm3_python import toolbox_defaults
 from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
 from cbm3_aws import download
@@ -28,19 +27,24 @@ def run_tasks(task_message, local_working_dir, s3_interface):
     """
 
     # download resources
+    toolbox_env_path = os.path.join(
+        local_working_dir, "toolbox_env")
+    download.download_resources(
+        s3_interface, "toolbox_env", toolbox_env_path)
+
     archive_index_path = os.path.join(
         local_working_dir, "archive_index.mdb")
-    download.download_resources(
+    download.download_resource(
         s3_interface, "archive_index_database", archive_index_path)
 
     cbm_executables_dir = os.path.join(
         local_working_dir, "cbm_executables")
-    download.download_resources(
+    download.download_resource(
         s3_interface, "cbm_executables", cbm_executables_dir)
 
     stand_recovery_rules_dir = os.path.join(
         local_working_dir, "stand_recovery_rules")
-    download.download_resources(
+    download.download_resource(
         s3_interface, "stand_recovery_rules", stand_recovery_rules_dir)
     disturbance_rules_path = os.path.join(
         stand_recovery_rules_dir, "disturbance_rules.csv")
@@ -86,8 +90,8 @@ def run_tasks(task_message, local_working_dir, s3_interface):
         if not os.path.exists(task.tempfiles_output_dir):
             os.makedirs(task.tempfiles_output_dir)
 
-    projectsimulator.run_concurrent(
-        args_list, toolbox_defaults.INSTALL_PATH)
+    list(projectsimulator.run_concurrent(
+        args_list, toolbox_env_path))
 
     for task in iterate_tasks(task_message):
         upload.upload_results_database(

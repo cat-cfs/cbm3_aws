@@ -80,5 +80,5 @@ def worker(activity_arn, s3_bucket_name, region_name):
 def run(activity_arn, s3_bucket_name, region):
     num_workers = psutil.cpu_count()
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        for i in range(num_workers):
+        for _ in range(num_workers):
             executor.submit(worker, activity_arn, s3_bucket_name, region)

@@ -17,5 +17,5 @@ def download_project_database(s3_interface, project_code, local_path):
     s3_interface.download_compressed("projects", project_code, local_path)
 
 
-def download_resources(s3_interface, name, local_path):
+def download_resource(s3_interface, name, local_path):
     s3_interface.download_compressed("resources", name, local_path)

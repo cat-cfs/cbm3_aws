@@ -5,34 +5,43 @@ from urllib import request
 from io import BytesIO
 
 
-def download_file(url, local_file_path):
+def _download_file(url, local_file_path):
     response = request.urlopen(url)
     with open(local_file_path, 'wb') as local_file:
         local_file.write(BytesIO(response.read()).read())
 
 
-def upload_to_s3(s3_interface, local_software_dir):
+def _upload_to_s3(s3_interface, local_software_dir):
     s3_interface.upload_compressed(
         key_name_prefix="instance_prep",
         document_name="instance_software",
         local_path=local_software_dir)
 
 
-def load_software_list():
+def _load_software_list():
     software_list_path = os.path.join(
         get_local_dir(), "instance_prep_software.json")
     with open(software_list_path) as software_list_file:
         return json.load(software_list_file)["software_list"]
 
 
-def process_files(s3_interface, local_software_dir):
-    for software in load_software_list():
-        download_file(
+def upload_software(s3_interface, local_software_dir):
+    """downloads software for instance installation using the links
+    in the packaged ./instance_prep_software.json file and upload them
+    to s3 using the specified s3_interface object.
+
+    Args:
+        s3_interface (cbm3_aws.s3_interface.S3Interface): object for uploading
+            the software to s3
+        local_software_dir (str): directory to store the downloaded software
+    """
+    for software in _load_software_list():
+        _download_file(
             url=software["url"],
             local_file_path=os.path.join(
                 local_software_dir, software["file_name"]))
 
-    upload_to_s3(s3_interface, local_software_dir)
+    _upload_to_s3(s3_interface, local_software_dir)
 
 
 def get_local_dir():
@@ -65,7 +74,7 @@ def get_userdata(bucket_name, base64_encode=False):
         ps1_script = ps1_script_file.read()
 
     user_data_script = '\n'.join([
-        '<powershell>'
+        '<powershell>',
         '\n'.join(ps1_variables),
         ps1_script,
         '</powershell>'

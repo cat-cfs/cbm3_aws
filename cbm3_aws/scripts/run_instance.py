@@ -17,6 +17,9 @@ def main():
     parser.add_argument(
         "--s3_bucket_name", required=True,
         help="Name of the s3 bucket that the instance will interact with")
+    parser.add_argument(
+        "--region_name", required=True,
+        help="AWS region name")
 
     try:
         args = parser.parse_args()

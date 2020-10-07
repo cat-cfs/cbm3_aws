@@ -22,3 +22,6 @@ Start-Process -FilePath ~\software\AccessDatabaseEngine_X64.exe -ArgumentList "/
 
 ## prepare the instance to user user-data on next boot
 C:\ProgramData\Amazon\EC2-Windows\Launch\Scripts\InitializeInstance.ps1 -Schedule
+
+# shut down the instance after the above steps have completed, so that an AMI can be prepared base on the instance
+shutdown /s

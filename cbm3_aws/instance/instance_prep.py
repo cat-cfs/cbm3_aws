@@ -60,8 +60,8 @@ def get_userdata(bucket_name, base64_encode=False):
     Args:
         bucket_name (str): name of bucket from which the instance can download
             the required software.
-        base64_encode (bool, optional): If set to true the returned string is base64
-            encoded. Defaults to False.
+        base64_encode (bool, optional): If set to true the returned string is
+            base64 encoded. Defaults to False.
 
     Returns:
         str: the user data script

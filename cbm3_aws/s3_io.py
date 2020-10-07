@@ -15,22 +15,14 @@ class S3IO:
 
     def _register_methods(self):
         self.doc_name_methods = {
-            "results": {
-                lambda **kwargs:
-                    f'{kwargs["project_code"]}_{kwargs["simulation_id"]}'
-            },
-            "tempfiles": {
-                lambda **kwargs:
-                    f'{kwargs["project_code"]}_{kwargs["simulation_id"]}'
-            },
-            "project": {
-                lambda **kwargs:
-                    f'{kwargs["project_code"]}'
-            },
-            "resource": {
-                lambda **kwargs:
-                    f'{kwargs["resource_name"]}'
-            }
+            "results": lambda **kwargs:
+                f'{kwargs["project_code"]}_{kwargs["simulation_id"]}',
+            "tempfiles": lambda **kwargs:
+                f'{kwargs["project_code"]}_{kwargs["simulation_id"]}',
+            "project": lambda **kwargs:
+                f'{kwargs["project_code"]}',
+            "resource": lambda **kwargs:
+                f'{kwargs["resource_name"]}',
         }
 
     def download(self, local_path, s3_key, **kwargs):

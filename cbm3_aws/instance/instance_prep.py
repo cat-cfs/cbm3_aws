@@ -24,6 +24,7 @@ SOFTWARE_LIST = [
 instance_commands = [
     "Read-S3Object -BucketName cat-cfs -Key instance_prep/software.zip ~\software.zip",
     "Expand-Archive -LiteralPath ~\software.zip -DestinationPath ~\software",
+    "DISM /Online /Enable-Feature:NetFx3 /All"
     'Start-Process -FilePath ~\software\python-3.9.0-amd64.exe -ArgumentList "/quiet TargetDir=c:\python InstallAllUsers=1 PrependPath=1 Include_test=0" -NoNewWindow -Wait',
     'Start-Process -FilePath C:\users\Administrator\software\AccessDatabaseEngine_X64.exe -ArgumentList "/quiet" -NoNewWindow -Wait',
     '[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python")',

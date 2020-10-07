@@ -29,7 +29,7 @@ def run_tasks(task_message, local_working_dir, s3_interface):
     # download resources
     toolbox_env_path = os.path.join(
         local_working_dir, "toolbox_env")
-    download.download_resources(
+    download.download_resource(
         s3_interface, "toolbox_env", toolbox_env_path)
 
     archive_index_path = os.path.join(

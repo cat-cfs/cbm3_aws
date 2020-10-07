@@ -93,7 +93,7 @@ def run_tasks(task_message, local_working_dir, s3_interface):
     list(projectsimulator.run_concurrent(
         args_list, toolbox_env_path))
 
-    for task in iterate_tasks(task_message):
+    for task in iterate_tasks(task_message, local_projects, local_results_dir):
         upload.upload_results_database(
             s3_interface, task.project_code, task.simulation_id,
             task.results_database_path)

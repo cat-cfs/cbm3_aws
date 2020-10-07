@@ -1,0 +1,19 @@
+{
+    "software_list": [
+        {
+            "name": "python",
+            "url": "https://www.python.org/ftp/python/3.8.6/python-3.8.6-amd64.exe",
+            "file_name": "python-3.8.6-amd64.exe"
+        },
+        {
+            "name": "git",
+            "url": "https://github.com/git-for-windows/git/releases/download/v2.28.0.windows.1/Git-2.28.0-64-bit.exe",
+            "file_name": "Git-2.28.0-64-bit.exe"
+        },
+        {
+            "name": "MS Access driver",
+            "url": "https://download.microsoft.com/download/2/4/3/24375141-E08D-4803-AB0E-10F2E3A07AAA/AccessDatabaseEngine_X64.exe",
+            "file_name": "AccessDatabaseEngine_X64.exe"
+        }
+    ]
+}

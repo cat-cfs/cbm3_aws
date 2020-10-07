@@ -16,6 +16,10 @@ console_scripts = [
     "cbm3_aws_start_execution = cbm3_aws.scripts.start_execution:main"
 ]
 
+package_data = [
+    os.path.join("instance", "instance_prep_software.json"),
+    os.path.join("instance", "instance_prep.ps1"),
+]
 setup(
     name="cbm3_aws",
     version="0.5.1",
@@ -29,5 +33,6 @@ setup(
     entry_points={
         "console_scripts": console_scripts
     },
+    package_data={"cbm3_aws": package_data},
     install_requires=requirements
 )

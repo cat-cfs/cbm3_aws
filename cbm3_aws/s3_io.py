@@ -33,13 +33,13 @@ class S3IO:
             }
         }
 
-    def download(self, s3_key, local_path, **kwargs):
+    def download(self, local_path, s3_key, **kwargs):
         self.s3_interface.download_compressed(
             key_name_prefix=self._create_key_name_prefix(s3_key),
             document_name=self.doc_name_methods[s3_key](**kwargs),
             local_path=local_path)
 
-    def upload(self, s3_key, local_path, **kwargs):
+    def upload(self, local_path, s3_key, **kwargs):
         self.s3_interface.upload_compressed(
             key_name_prefix=self._create_key_name_prefix(s3_key),
             document_name=self.doc_name_methods[s3_key](**kwargs),

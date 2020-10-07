@@ -28,25 +28,25 @@ def run_tasks(task_message, local_working_dir, s3_io):
     toolbox_env_path = os.path.join(
         local_working_dir, "toolbox_env")
     s3_io.download(
-        s3_key="resource", local_path=toolbox_env_path,
+        local_path=toolbox_env_path, s3_key="resource",
         resource_name="toolbox_env")
 
     archive_index_path = os.path.join(
         local_working_dir, "archive_index.mdb")
     s3_io.download(
-        s3_key="resource", local_path=archive_index_path,
+        local_path=archive_index_path, s3_key="resource",
         resource_name="archive_index_database")
 
     cbm_executables_dir = os.path.join(
         local_working_dir, "cbm_executables")
     s3_io.download(
-        s3_key="resource", local_path=cbm_executables_dir,
+        local_path=cbm_executables_dir, s3_key="resource",
         resource_name="cbm_executables")
 
     stand_recovery_rules_dir = os.path.join(
         local_working_dir, "stand_recovery_rules")
     s3_io.download(
-        s3_key="resource", local_path=stand_recovery_rules_dir,
+        local_path=stand_recovery_rules_dir, s3_key="resource",
         resource_name="stand_recovery_rules")
     disturbance_rules_path = os.path.join(
         stand_recovery_rules_dir, "disturbance_rules.csv")
@@ -63,7 +63,7 @@ def run_tasks(task_message, local_working_dir, s3_io):
         local_project_path = os.path.join(
             local_project_dir, f"{project_code}.mdb")
         s3_io.download(
-            s3_key="project", local_path=local_project_path,
+            local_path=local_project_path, s3_key="project",
             project_code=project_code)
         local_projects[project_code] = local_project_path
 
@@ -95,15 +95,15 @@ def run_tasks(task_message, local_working_dir, s3_io):
 
     for task in iterate_tasks(task_message, local_projects, local_results_dir):
         s3_io.upload(
-            s3_key="results", local_path=task.results_database_path,
+            local_path=task.results_database_path, s3_key="results",
             project_code=task.project_code, simulation_id=task.simulation_id)
         os.unlink(task.results_database_path)
         # upload all other files and dirs where the project was loaded as
         # "tempfiles" This will include the run flat files, stdout file and
         # the run log.
         s3_io.upload(
-            s3_key="tempfiles",
             local_path=os.path.dirname(task.tempfiles_output_dir),
+            s3_key="tempfiles",
             project_code=task.project_code, simulation_id=task.simulation_id)
 
 

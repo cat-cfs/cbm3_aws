@@ -1,3 +1,4 @@
 boto3
 shortuuid
+psutil
 cbm3_python>=0.6.6

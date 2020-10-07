@@ -70,7 +70,7 @@ def run_tasks(task_message, local_working_dir, s3_interface):
 
     args_list = []
 
-    for task in iterate_tasks(task_message):
+    for task in iterate_tasks(task_message, local_projects, local_results_dir):
 
         args_list.append({
             "project_path": task.project_path,

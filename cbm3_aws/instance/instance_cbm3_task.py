@@ -72,6 +72,8 @@ def run_tasks(task_message, local_working_dir, s3_interface):
 
     for task in iterate_tasks(task_message, local_projects, local_results_dir):
 
+        os.makedirs(os.path.dirname(task.results_database_path))
+
         args_list.append({
             "project_path": task.project_path,
             "project_simulation_id": task.simulation_id,
@@ -85,11 +87,6 @@ def run_tasks(task_message, local_working_dir, s3_interface):
             "dist_rules_path": disturbance_rules_path
         })
 
-        # the stdout file will be created here before the inner scripts
-        # have a chance to make this dir
-        if not os.path.exists(task.tempfiles_output_dir):
-            os.makedirs(task.tempfiles_output_dir)
-
     list(projectsimulator.run_concurrent(
         args_list, toolbox_env_path))
 
@@ -97,9 +94,12 @@ def run_tasks(task_message, local_working_dir, s3_interface):
         upload.upload_results_database(
             s3_interface, task.project_code, task.simulation_id,
             task.results_database_path)
+        os.unlink(task.results_database_path)
+        # upload all other files and dirs where the project was loaded as
+        # "tempfiles"
         upload.upload_tempfiles(
             s3_interface, task.project_code, task.simulation_id,
-            task.tempfiles_output_dir)
+            os.path.dirname(task.tempfiles_output_dir))
 
 
 def iterate_tasks(task_message, local_projects, local_results_dir):
@@ -113,14 +113,16 @@ def iterate_tasks(task_message, local_projects, local_results_dir):
                 results_database_path=os.path.join(
                     local_results_dir,
                     project_code,
+                    str(simulation_id),
                     f"{simulation_id}.mdb"),
                 tempfiles_output_dir=os.path.join(
                     local_results_dir,
                     project_code,
+                    str(simulation_id),
                     f"temp_files_{simulation_id}"),
                 stdout_path=os.path.join(
                     local_results_dir,
                     project_code,
-                    f"temp_files_{simulation_id}",
-                    "stdout.txt")
+                    str(simulation_id),
+                    f"stdout_{simulation_id}.txt")
                 )

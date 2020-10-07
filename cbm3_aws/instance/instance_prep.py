@@ -32,7 +32,9 @@ instance_commands = [
     'pip install C:\Users\Administrator\Downloads\numpy-1.19.2+mkl-cp38-cp38-win_amd64.whl'
     'pip install C:\Users\Administrator\Desktop\cbm3_python-0.6.7-py3-none-any.whl'
     'pip install ?cbm3_aws.whl'
+    'C:\ProgramData\Amazon\EC2-Windows\Launch\Scripts\InitializeInstance.ps1 –Schedule'
 ]
+
 
 def download_file(url, local_file_path):
     response = request.urlopen(url)

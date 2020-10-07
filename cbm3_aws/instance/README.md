@@ -1,11 +1,11 @@
 # instance set up
 
-The following commands must be run to prepare an instance for running CBM3
+In order to run CBM3 the instance needs software installed.  This package `cbm3_aws.instance` has modules for helping with instance preparation.
+
 
 ## python 3x
 
 https://www.python.org/ftp/python/3.9.0/python-3.9.0-amd64.exe
-
 
 
 ## Enable .net 2.0/3.5
@@ -19,7 +19,6 @@ DISM /Online /Enable-Feature:NetFx3 /All
 
 Dism /online /enable-feature:NetFX3 /All /Source:X:\sources\sxs
 ```
-
 
 
 ## MS Access driver
@@ -59,4 +58,4 @@ with open("user_data_script.txt", 'w') as user_data_script_fp:
 This will upload the required software to the cat-cfs bucket, and generate a userdata script at the path: `"user_data_script.txt"`
 
 Create an instance and set the user data field to the user data script text.
-After the instance configures and shuts down create an AMI from the instance, and delete the instance.
+After the instance configures and shuts down create an AMI from the instance, and delete the instance.  The AMI's identifier can be passed to the `cbm3_aws.scripts.aws_deploy` command line interface.

@@ -1,5 +1,5 @@
 ## download zipped software from s3
-Read-S3Object -BucketName  $s3bucket -Key instance_prep/instance_software.zip ~\instance_software.zip
+Read-S3Object -BucketName  $s3bucket -Key cbm3_aws/instance_prep/instance_software.zip ~\instance_software.zip
 # unzip archive
 Expand-Archive -LiteralPath ~\instance_software.zip -DestinationPath ~\software
 

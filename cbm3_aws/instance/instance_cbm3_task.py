@@ -8,17 +8,23 @@ from cbm3_aws import upload
 
 
 def run_tasks(task_message, local_working_dir, s3_interface):
-    """
-        task_message = [
-            {"project_code": "AB",
-             "simulation_ids": [1, 2]},
-            {"project_code": "BCB",
-             "simulation_ids": [21, 22]}
-            ]
+    """Runs a CBM3 project simulation task
+
+        :: Example task_message
+
+            task_message = [
+                {"project_code": "AB",
+                "simulation_ids": [1, 2]},
+                {"project_code": "BCB",
+                "simulation_ids": [21, 22]}
+                ]
 
     Args:
-        task_message (list): list of simulation tasks
-        local_working_dir ([type]): [description]
+        task_message (list): list of simulation tasks to run.
+        local_working_dir (str): writeable directory for processing CBM
+            simulation
+        s3_interface (cbm3_aws.s3_interface.S3Interface) object for managing
+            uploads and downloads for AWS S3
     """
 
     # download resources

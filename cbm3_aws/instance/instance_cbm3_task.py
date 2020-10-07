@@ -2,11 +2,9 @@ import os
 
 from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
-from cbm3_aws import download
-from cbm3_aws import upload
 
 
-def run_tasks(task_message, local_working_dir, s3_interface):
+def run_tasks(task_message, local_working_dir, s3_io):
     """Runs a CBM3 project simulation task
 
         :: Example task_message
@@ -22,30 +20,34 @@ def run_tasks(task_message, local_working_dir, s3_interface):
         task_message (list): list of simulation tasks to run.
         local_working_dir (str): writeable directory for processing CBM
             simulation
-        s3_interface (cbm3_aws.s3_interface.S3Interface) object for managing
+        s3_io (cbm3_aws.s3_io.S3IO) object for managing cbm3_aws
             uploads and downloads for AWS S3
     """
 
     # download resources
     toolbox_env_path = os.path.join(
         local_working_dir, "toolbox_env")
-    download.download_resource(
-        s3_interface, "toolbox_env", toolbox_env_path)
+    s3_io.download(
+        s3_key="resource", local_path=toolbox_env_path,
+        resource_name="toolbox_env")
 
     archive_index_path = os.path.join(
         local_working_dir, "archive_index.mdb")
-    download.download_resource(
-        s3_interface, "archive_index_database", archive_index_path)
+    s3_io.download(
+        s3_key="resource", local_path=archive_index_path,
+        resource_name="archive_index_database")
 
     cbm_executables_dir = os.path.join(
         local_working_dir, "cbm_executables")
-    download.download_resource(
-        s3_interface, "cbm_executables", cbm_executables_dir)
+    s3_io.download(
+        s3_key="resource", local_path=cbm_executables_dir,
+        resource_name="cbm_executables")
 
     stand_recovery_rules_dir = os.path.join(
         local_working_dir, "stand_recovery_rules")
-    download.download_resource(
-        s3_interface, "stand_recovery_rules", stand_recovery_rules_dir)
+    s3_io.download(
+        s3_key="resource", local_path=stand_recovery_rules_dir,
+        resource_name="stand_recovery_rules")
     disturbance_rules_path = os.path.join(
         stand_recovery_rules_dir, "disturbance_rules.csv")
     disturbance_classes_path = os.path.join(
@@ -60,8 +62,9 @@ def run_tasks(task_message, local_working_dir, s3_interface):
     for project_code in required_projects:
         local_project_path = os.path.join(
             local_project_dir, f"{project_code}.mdb")
-        download.download_project_database(
-            s3_interface, project_code, local_project_path)
+        s3_io.download(
+            s3_key="project", local_path=local_project_path,
+            project_code=project_code)
         local_projects[project_code] = local_project_path
 
     local_results_dir = os.path.join(local_working_dir, "results")
@@ -91,15 +94,17 @@ def run_tasks(task_message, local_working_dir, s3_interface):
         args_list, toolbox_env_path))
 
     for task in iterate_tasks(task_message, local_projects, local_results_dir):
-        upload.upload_results_database(
-            s3_interface, task.project_code, task.simulation_id,
-            task.results_database_path)
+        s3_io.upload(
+            s3_key="results", local_path=task.results_database_path,
+            project_code=task.project_code, simulation_id=task.simulation_id)
         os.unlink(task.results_database_path)
         # upload all other files and dirs where the project was loaded as
-        # "tempfiles"
-        upload.upload_tempfiles(
-            s3_interface, task.project_code, task.simulation_id,
-            os.path.dirname(task.tempfiles_output_dir))
+        # "tempfiles" This will include the run flat files, stdout file and
+        # the run log.
+        s3_io.upload(
+            s3_key="tempfiles",
+            local_path=os.path.dirname(task.tempfiles_output_dir),
+            project_code=task.project_code, simulation_id=task.simulation_id)
 
 
 def iterate_tasks(task_message, local_projects, local_results_dir):

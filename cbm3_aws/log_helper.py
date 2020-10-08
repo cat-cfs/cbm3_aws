@@ -2,14 +2,15 @@ import datetime
 import logging
 
 
-def start_logging(level):
+def start_logging(name, level):
     rootLogger = logging.getLogger()
 
     logFormatter = logging.Formatter(
         "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
         datefmt="%m-%d %H:%M")
 
-    log_path = "cbm3_aws_log_{date}.log".format(
+    log_path = "{name}_{date}.log".format(
+        name=name,
         date=datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
     fileHandler = logging.FileHandler(log_path, "w")
     fileHandler.setFormatter(logFormatter)
@@ -22,5 +23,5 @@ def start_logging(level):
     rootLogger.setLevel(level)
 
 
-def get_logger():
-    return logging.getLogger("cbm3_aws")
+def get_logger(name):
+    return logging.getLogger(f"cbm3_aws.{name}")

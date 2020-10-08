@@ -2,7 +2,7 @@ import os
 import zipfile
 from cbm3_aws import log_helper
 
-logger = log_helper.get_logger()
+logger = log_helper.get_logger(__name__)
 
 
 class S3Interface(object):

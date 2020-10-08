@@ -25,10 +25,10 @@ def main():
         "--tasks_path", required=True, type=os.path.abspath,
         help="Path to json formatted tasks who has at a minimum a "
              "'task_list' key whose value is the list of tasks to "
-             "pass to each instance as it calls get_activity_task")
+             "pass to each instance as they call get_activity_task")
 
-    log_helper.start_logging(level="INFO")
-    logger = log_helper.get_logger()
+    log_helper.start_logging("start_execution", level="INFO")
+    logger = log_helper.get_logger("start_execution")
     try:
         args = parser.parse_args()
         logger.info("start_execution")

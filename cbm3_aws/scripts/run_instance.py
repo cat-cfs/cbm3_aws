@@ -4,8 +4,8 @@ from cbm3_aws.instance import instance_task
 
 
 def main():
-    log_helper.start_logging()
-    logger = log_helper.get_logger()
+    log_helper.start_logging("run_instance", level="INFO")
+    logger = log_helper.get_logger("run_instance")
     logger.info("run_instance start up")
 
     parser = ArgumentParser(

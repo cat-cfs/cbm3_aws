@@ -13,6 +13,8 @@ from cbm3_aws.aws.names import get_names
 from cbm3_aws.aws.names import get_uuid
 from cbm3_aws import log_helper
 
+logger = log_helper.get_logger(__name__)
+
 
 def __s3_bucket_exists(s3_client, bucket_name):
     try:
@@ -39,7 +41,7 @@ def cleanup(resource_description):
             the :py:func:`deploy` method which contains identifying
             information for AWS resources to deallocate.
     """
-    logger = log_helper.get_logger()
+
     rd = resource_description
 
     logger.info("connecting")
@@ -84,7 +86,6 @@ def cleanup(resource_description):
 
 def deploy(region_name, s3_bucket_name, min_instances, max_instances,
            image_ami_id, instance_type, resource_description_path):
-    logger = log_helper.get_logger()
 
     if os.path.exists(resource_description_path):
         raise ValueError(

@@ -49,9 +49,9 @@ def run_tasks(task_message, local_working_dir, s3_io):
         local_path=stand_recovery_rules_dir, s3_key="resource",
         resource_name="stand_recovery_rules")
     disturbance_rules_path = os.path.join(
-        stand_recovery_rules_dir, "disturbance_rules.csv")
+        stand_recovery_rules_dir, "99a_disturbance_rules.csv")
     disturbance_classes_path = os.path.join(
-        stand_recovery_rules_dir, "disturbance_classes.csv")
+        stand_recovery_rules_dir, "99b_disturbance_classes.csv")
 
     # download projects
     local_project_dir = os.path.join(local_working_dir, "projects")
@@ -97,6 +97,7 @@ def run_tasks(task_message, local_working_dir, s3_io):
         s3_io.upload(
             local_path=task.results_database_path, s3_key="results",
             project_code=task.project_code, simulation_id=task.simulation_id)
+        # remove the project db so it wont be uploaded in the next step
         os.unlink(task.results_database_path)
         # upload all other files and dirs where the project was loaded as
         # "tempfiles" This will include the run flat files, stdout file and

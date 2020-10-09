@@ -13,7 +13,7 @@ def _download_file(url, local_file_path):
 
 def _upload_to_s3(s3_interface, local_software_dir):
     s3_interface.upload_compressed(
-        key_name_prefix="/cbm3_aws/instance_prep",
+        key_name_prefix="cbm3_aws/instance_prep",
         document_name="instance_software",
         local_path=local_software_dir)
 

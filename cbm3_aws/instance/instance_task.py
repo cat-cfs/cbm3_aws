@@ -93,14 +93,16 @@ def worker(activity_arn, s3_bucket_name, region_name):
                 taskToken=task_token,
                 output=json.dumps({"output": task_input["simulations"]}))
         except Exception:
-            heart_beat_process.kill()
             client.send_task_failure(
                 taskToken=task_token,
                 error="Exception",
                 cause=traceback.format_exc())
+            if heart_beat_process and heart_beat_process.is_alive():
+                heart_beat_process.kill()
             time.sleep(60)
         finally:
-            heart_beat_process.kill()
+            if heart_beat_process and heart_beat_process.is_alive():
+                heart_beat_process.kill()
 
 
 def run(activity_arn, s3_bucket_name, region):

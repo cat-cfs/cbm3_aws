@@ -24,5 +24,5 @@ def start_execution(execution_name, state_machine_arn, region_name, tasks):
     start_execution_response = sfn_client.start_execution(
         stateMachineArn=state_machine_arn,
         name=execution_name,
-        input=json.dumps({"input": tasks}))
+        input=json.dumps(tasks))
     return {str(k): str(v) for k, v in start_execution_response.items()}

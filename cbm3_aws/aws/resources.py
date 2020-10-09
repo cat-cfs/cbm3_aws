@@ -152,7 +152,8 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         logger.info("creating userdata")
         rd.user_data = create_userdata(
             s3_bucket_name=rd.s3_bucket_name,
-            activity_arn=rd.state_machine_context.activity_arn)
+            activity_arn=rd.state_machine_context.activity_arn,
+            region_name=rd.region_name)
 
         iam_instance_profile_arn = \
             rd.instance_iam_role_context.instance_profile_arn
@@ -160,7 +161,9 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         # https://github.com/hashicorp/terraform/issues/15341
         # need to add a delay for the iam changes above to be processed
         # internally by AWS
-        time.sleep(20)
+        wait_time = 20
+        logger.info(f"waiting {wait_time} seconds for changes to take effect on AWS")
+        time.sleep(wait_time)
 
         logger.info("creating launch template")
         rd.launch_template_context = autoscale_group.create_launch_template(

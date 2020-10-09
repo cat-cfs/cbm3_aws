@@ -1,7 +1,7 @@
 import base64
 
 
-def create_userdata(activity_arn, s3_bucket_name):
+def create_userdata(activity_arn, s3_bucket_name, region_name):
     """Creates the script to run at the start of each instance worker,
     passed to the ec2 instance launch user-data parameter.
 
@@ -12,7 +12,8 @@ def create_userdata(activity_arn, s3_bucket_name):
     instance_run_script_command = \
         "cbm3_aws_instance " \
         f"--activity_arn {activity_arn} " \
-        f"--s3_bucket_name {s3_bucket_name}"
+        f"--s3_bucket_name {s3_bucket_name} " \
+        f"--region_name {region_name}"
 
     commands = [
         "<powershell>",

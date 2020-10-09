@@ -1,7 +1,8 @@
 import os
+import json
 import time
 import tempfile
-import sys
+import traceback
 import psutil
 from multiprocessing import Process
 from concurrent.futures import ProcessPoolExecutor
@@ -9,6 +10,7 @@ import boto3
 from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task
 from cbm3_aws.s3_interface import S3Interface
+from cbm3_aws.s3_io import S3IO
 
 
 def _heartbeat(task_token, region_name):
@@ -21,19 +23,37 @@ def _heartbeat(task_token, region_name):
 
 
 def worker(activity_arn, s3_bucket_name, region_name):
+    """Run a worker persistently on a single thread.
+
+    The worker will call get_activity_task repeatedly with delayed retries
+    until it gets a response from the cbm3_aws state machine.
+
+
+        ::task input format (the content of activity_task_response["input"])
+
+            "upload_s3_key": "string",
+            "simulations":[
+                {"project_code": "string", "simulation_ids": [integer]}
+            ]
+
+    Args:
+        activity_arn (string): the resource name for the activity task to poll
+        s3_bucket_name (string): the name of the s3 bucket to get input data
+            from and to upload results to
+        region_name (string): AWS region name
+    """
+
+    # config here is based on the AWS recommendation found in the boto
+    # docs, and the pull request here:
+    # https://github.com/boto/botocore/pull/634
+    client = boto3.client(
+        'stepfunctions', region_name=region_name,
+        config=Config(connect_timeout=65, read_timeout=65))
+
+    get_activity_task_response = client.get_activity_task(
+        activityArn=activity_arn)
 
     while True:
-
-        # config here is based on the AWS recommendation found in the boto
-        # docs, and the pull request here:
-        # https://github.com/boto/botocore/pull/634
-        client = boto3.client(
-            'stepfunctions', region_name=region_name,
-            config=Config(connect_timeout=65, read_timeout=65))
-
-        get_activity_task_response = client.get_activity_task(
-            activityArn=activity_arn)
-
         if not get_activity_task_response["taskToken"]:
             # If there is a null task token it means there is no task
             # available. Sleep the worker and try again
@@ -41,38 +61,40 @@ def worker(activity_arn, s3_bucket_name, region_name):
                 get_activity_task_response = client.get_activity_task(
                     activityArn=activity_arn)
                 time.sleep(60)
-
+        task_token = get_activity_task_response["taskToken"]
         try:
-            task_token = get_activity_task_response["taskToken"]
             heart_beat_process = Process(
                 target=_heartbeat, args=(task_token, region_name))
             heart_beat_process.start()
+            task_input = json.loads(get_activity_task_response["input"])
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 s3_working_dir = os.path.join(temp_dir, "s3_working")
                 os.makedirs(s3_working_dir)
 
-                s3_interface = S3Interface(
-                    s3_resource=boto3.resource('s3'),
-                    bucket_name=s3_bucket_name,
-                    local_temp_dir=s3_working_dir)
+                s3_io = S3IO(
+                    execution_s3_key_prefix=task_input["upload_s3_key"],
+                    s3_interface=S3Interface(
+                        s3_resource=boto3.resource('s3'),
+                        bucket_name=s3_bucket_name,
+                        local_temp_dir=s3_working_dir))
 
                 cbm3_working_dir = os.path.join(temp_dir, "cbm3_working")
                 os.makedirs(cbm3_working_dir)
-                task_input = get_activity_task_response["input"]
+
                 instance_cbm3_task.run_tasks(
-                    task_message=task_input,
+                    task_message=task_input["simulations"],
                     local_working_dir=cbm3_working_dir,
-                    s3_interface=s3_interface)
-                client.send_task_success(
-                    taskToken=task_token,
-                    output=task_input)
+                    s3_io=s3_io)
+
+            client.send_task_success(
+                taskToken=task_token,
+                output=task_input)
         except Exception:
             client.send_task_failure(
                 taskToken=task_token,
-                error="error",
-                cause=sys.exc_info()[0])
-
+                error="Exception",
+                cause=traceback.format_exc())
         finally:
             heart_beat_process.kill()
 

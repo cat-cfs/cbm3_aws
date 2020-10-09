@@ -15,13 +15,13 @@ class S3Interface(object):
         self.__singleFileFlag = "__is__single__file_archive__"
 
     def download_file(self, keyName, localPath):
-        logger.debug(
+        logger.info(
             "downloading file from S3 '{0}' to '{1}'".format(
                 keyName, localPath))
         self.bucket.download_file(keyName, localPath)
 
     def upload_file(self, localPath, keyName):
-        logger.debug(
+        logger.info(
             "uploading file '{0}' to S3 '{1}'".format(localPath, keyName))
         self.bucket.upload_file(localPath, keyName)
 
@@ -103,7 +103,8 @@ class S3Interface(object):
         # archive directory may add a file extension
         ext = os.path.splitext(fn)[1]
         document_name = document_name + ext
-        self.upload_file(fn, "/".join([key_name_prefix, document_name]))
+        s3_key = "/".join([key_name_prefix, document_name])
+        self.upload_file(fn, s3_key)
         os.remove(fn)
 
     def download_compressed(self, key_name_prefix, document_name, local_path):
@@ -113,7 +114,7 @@ class S3Interface(object):
         # for the above replace: if the documentname itself represents a
         # nested S3 key, convert it to something that can be written to
         # file systems for the local temp file
-        self.download_file(
-            "/".join([key_name_prefix, document_name]), archiveName)
+        s3_key = "/".join([key_name_prefix, document_name])
+        self.download_file(s3_key, archiveName)
         self.unpack_file_or_directory(archiveName, local_path)
         os.remove(archiveName)

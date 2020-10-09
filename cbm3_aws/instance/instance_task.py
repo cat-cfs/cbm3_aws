@@ -50,10 +50,11 @@ def worker(activity_arn, s3_bucket_name, region_name):
         'stepfunctions', region_name=region_name,
         config=Config(connect_timeout=65, read_timeout=65))
 
-    get_activity_task_response = client.get_activity_task(
-        activityArn=activity_arn)
-
     while True:
+
+        get_activity_task_response = client.get_activity_task(
+            activityArn=activity_arn)
+
         if not get_activity_task_response["taskToken"]:
             # If there is a null task token it means there is no task
             # available. Sleep the worker and try again
@@ -61,6 +62,7 @@ def worker(activity_arn, s3_bucket_name, region_name):
                 get_activity_task_response = client.get_activity_task(
                     activityArn=activity_arn)
                 time.sleep(60)
+
         task_token = get_activity_task_response["taskToken"]
         try:
             heart_beat_process = Process(
@@ -89,12 +91,14 @@ def worker(activity_arn, s3_bucket_name, region_name):
 
             client.send_task_success(
                 taskToken=task_token,
-                output=task_input)
+                output=json.dumps({"output": task_input["simulations"]}))
         except Exception:
+            heart_beat_process.kill()
             client.send_task_failure(
                 taskToken=task_token,
                 error="Exception",
                 cause=traceback.format_exc())
+            time.sleep(60)
         finally:
             heart_beat_process.kill()
 

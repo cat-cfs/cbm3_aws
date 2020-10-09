@@ -45,7 +45,7 @@ def main():
                 "specified response_output_path already exists: "
                 f"'{args.response_output_path}'")
 
-        with open(args.response_output_path) as out_file:
+        with open(args.response_output_path, 'w') as out_file:
             with open(args.resource_description_path, 'r') as resources_fp:
                 rd = Namespace(**json.load(resources_fp))
             with open(args.tasks_file_path, 'r') as tasks_fp:

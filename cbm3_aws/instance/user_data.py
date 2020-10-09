@@ -17,7 +17,7 @@ def create_userdata(activity_arn, s3_bucket_name):
     commands = [
         "<powershell>",
         "pip install git+https://github.com/cat-cfs/cbm3_python",
-        "pip install git+https://github.com/cat-cfs/cbm3_aws",
+        "pip install git+https://github.com/smorken/cbm3_aws",
         instance_run_script_command,
         "</powershell>"
     ]

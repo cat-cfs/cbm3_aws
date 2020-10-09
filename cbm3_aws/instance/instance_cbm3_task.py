@@ -73,7 +73,9 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
 
     args_list = []
 
-    tasks = iterate_tasks(simulation_tasks, local_projects, local_results_dir)
+    tasks = list(
+        iterate_tasks(simulation_tasks, local_projects, local_results_dir))
+
     for task in tasks:
 
         os.makedirs(os.path.dirname(task.results_database_path))

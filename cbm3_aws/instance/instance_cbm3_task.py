@@ -4,12 +4,12 @@ from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
 
 
-def run_tasks(task_message, local_working_dir, s3_io):
+def run_tasks(simulation_tasks, local_working_dir, s3_io):
     """Runs a CBM3 project simulation task
 
-        :: Example task_message
+        :: Example simulation_tasks
 
-            task_message = [
+            simulation_tasks = [
                 {"project_code": "AB",
                 "simulation_ids": [1, 2]},
                 {"project_code": "BCB",
@@ -17,7 +17,7 @@ def run_tasks(task_message, local_working_dir, s3_io):
                 ]
 
     Args:
-        task_message (list): list of simulation tasks to run.
+        simulation_tasks (list): list of simulation tasks to run.
         local_working_dir (str): writeable directory for processing CBM
             simulation
         s3_io (cbm3_aws.s3_io.S3IO) object for managing cbm3_aws
@@ -57,7 +57,7 @@ def run_tasks(task_message, local_working_dir, s3_io):
     local_project_dir = os.path.join(local_working_dir, "projects")
     if not os.path.exists(local_project_dir):
         os.makedirs(local_project_dir)
-    required_projects = set([x["project_code"] for x in task_message])
+    required_projects = set([x["project_code"] for x in simulation_tasks])
     local_projects = {}
     for project_code in required_projects:
         local_project_path = os.path.join(
@@ -73,7 +73,8 @@ def run_tasks(task_message, local_working_dir, s3_io):
 
     args_list = []
 
-    for task in iterate_tasks(task_message, local_projects, local_results_dir):
+    tasks = iterate_tasks(simulation_tasks, local_projects, local_results_dir)
+    for task in tasks:
 
         os.makedirs(os.path.dirname(task.results_database_path))
 
@@ -93,7 +94,7 @@ def run_tasks(task_message, local_working_dir, s3_io):
     list(projectsimulator.run_concurrent(
         args_list, toolbox_env_path))
 
-    for task in iterate_tasks(task_message, local_projects, local_results_dir):
+    for task in tasks:
         s3_io.upload(
             local_path=task.results_database_path, s3_key="results",
             project_code=task.project_code, simulation_id=task.simulation_id)

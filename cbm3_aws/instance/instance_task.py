@@ -11,9 +11,6 @@ from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task
 from cbm3_aws.s3_interface import S3Interface
 from cbm3_aws.s3_io import S3IO
-from cbm3_aws import log_helper
-
-logger = log_helper.get_logger(__name__)
 
 
 class HeartBeatThread(Thread):
@@ -60,54 +57,60 @@ def worker(activity_arn, s3_bucket_name, region_name):
         get_activity_task_response = client.get_activity_task(
             activityArn=activity_arn)
 
+        retry_interval = 30
         if not get_activity_task_response["taskToken"]:
+            time.sleep(retry_interval)
             # If there is a null task token it means there is no task
             # available. Sleep the worker and try again
             while not get_activity_task_response["taskToken"]:
+
                 get_activity_task_response = client.get_activity_task(
                     activityArn=activity_arn)
-                time.sleep(60)
+                time.sleep(retry_interval)
 
         task_token = get_activity_task_response["taskToken"]
-        try:
-            heart_beat_stop_flag = Event()
-            heart_beat_thread = HeartBeatThread(heart_beat_stop_flag, 40)
-            heart_beat_thread.begin(client, task_token)
+        task_input = json.loads(get_activity_task_response["input"])
+        process_task(client, task_token, task_input, s3_bucket_name)
 
-            task_input = json.loads(get_activity_task_response["input"])
 
-            with tempfile.TemporaryDirectory() as temp_dir:
-                s3_working_dir = os.path.join(temp_dir, "s3_working")
-                os.makedirs(s3_working_dir)
+def process_task(client, task_token, task_input, s3_bucket_name):
+    try:
+        heart_beat_stop_flag = Event()
+        heart_beat_thread = HeartBeatThread(heart_beat_stop_flag, 40)
+        heart_beat_thread.begin(client, task_token)
 
-                s3_io = S3IO(
-                    execution_s3_key_prefix=task_input["upload_s3_key"],
-                    s3_interface=S3Interface(
-                        s3_resource=boto3.resource('s3'),
-                        bucket_name=s3_bucket_name,
-                        local_temp_dir=s3_working_dir))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            s3_working_dir = os.path.join(temp_dir, "s3_working")
+            os.makedirs(s3_working_dir)
 
-                cbm3_working_dir = os.path.join(temp_dir, "cbm3_working")
-                os.makedirs(cbm3_working_dir)
+            s3_io = S3IO(
+                execution_s3_key_prefix=task_input["upload_s3_key"],
+                s3_interface=S3Interface(
+                    s3_resource=boto3.resource('s3'),
+                    bucket_name=s3_bucket_name,
+                    local_temp_dir=s3_working_dir))
 
-                instance_cbm3_task.run_tasks(
-                    task_message=task_input["simulations"],
-                    local_working_dir=cbm3_working_dir,
-                    s3_io=s3_io)
+            cbm3_working_dir = os.path.join(temp_dir, "cbm3_working")
+            os.makedirs(cbm3_working_dir)
 
-            client.send_task_success(
-                taskToken=task_token,
-                output=json.dumps({"output": task_input["simulations"]}))
-        except Exception:
-            client.send_task_failure(
-                taskToken=task_token,
-                error="Exception",
-                cause=traceback.format_exc())
+            instance_cbm3_task.run_tasks(
+                task_message=task_input["simulations"],
+                local_working_dir=cbm3_working_dir,
+                s3_io=s3_io)
+
+        client.send_task_success(
+            taskToken=task_token,
+            output=json.dumps({"output": task_input["simulations"]}))
+    except Exception:
+        client.send_task_failure(
+            taskToken=task_token,
+            error="Exception",
+            cause=traceback.format_exc())
+        heart_beat_stop_flag.set()
+        time.sleep(60)
+    finally:
+        if not heart_beat_stop_flag.is_set():
             heart_beat_stop_flag.set()
-            time.sleep(60)
-        finally:
-            if not heart_beat_stop_flag.is_set():
-                heart_beat_stop_flag.set()
 
 
 def run(activity_arn, s3_bucket_name, region):

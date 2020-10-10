@@ -162,7 +162,8 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         # need to add a delay for the iam changes above to be processed
         # internally by AWS
         wait_time = 20
-        logger.info(f"waiting {wait_time} seconds for changes to take effect on AWS")
+        logger.info(
+            f"waiting {wait_time} seconds for changes to take effect on AWS")
         time.sleep(wait_time)
 
         logger.info("creating launch template")

@@ -65,11 +65,9 @@ def create_state_machine_policy(client, account_number, names):
     """
     prefix = f"arn:aws:states:*:{account_number}"
     resource_arn_list = [
-        f"{prefix}:activity:{names.run_activity}",
-        f"{prefix}:stateMachine:{names.run_state_machine}",
-        f"{prefix}:execution:{names.run_task_state_machine}:*",
-        f"{prefix}:stateMachine:{names.run_state_machine}",
-        f"{prefix}:execution:{names.run_task_state_machine}:*"
+        f"{prefix}:activity:*",
+        f"{prefix}:stateMachine:*",
+        f"{prefix}:execution:*:*"
     ]
 
     policy = {

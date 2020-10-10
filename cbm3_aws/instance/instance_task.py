@@ -4,22 +4,27 @@ import time
 import tempfile
 import traceback
 import psutil
-from multiprocessing import Process
+from threading import Thread, Event
 from concurrent.futures import ProcessPoolExecutor
 import boto3
 from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task
 from cbm3_aws.s3_interface import S3Interface
 from cbm3_aws.s3_io import S3IO
+from cbm3_aws import log_helper
+
+logger = log_helper.get_logger(__name__)
 
 
-def _heartbeat(task_token, region_name):
-    client = boto3.client('stepfunctions', region_name=region_name)
-    start_time = time.time()
-    while True:
-        client.send_task_heartbeat(
-            taskToken=task_token)
-        time.sleep(40.0 - ((time.time() - start_time) % 40.0))
+class HeartBeatThread(Thread):
+    def __init__(self, event, interval):
+        Thread.__init__(self)
+        self.stopped = event
+        self.interval = interval
+
+    def begin(self, client, task_token):
+        while not self.stopped.wait(self.interval):
+            client.send_task_heartbeat(taskToken=task_token)
 
 
 def worker(activity_arn, s3_bucket_name, region_name):
@@ -65,9 +70,10 @@ def worker(activity_arn, s3_bucket_name, region_name):
 
         task_token = get_activity_task_response["taskToken"]
         try:
-            heart_beat_process = Process(
-                target=_heartbeat, args=(task_token, region_name))
-            heart_beat_process.start()
+            heart_beat_stop_flag = Event()
+            heart_beat_thread = HeartBeatThread(heart_beat_stop_flag, 40)
+            heart_beat_thread.begin(client, task_token)
+
             task_input = json.loads(get_activity_task_response["input"])
 
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -97,12 +103,11 @@ def worker(activity_arn, s3_bucket_name, region_name):
                 taskToken=task_token,
                 error="Exception",
                 cause=traceback.format_exc())
-            if heart_beat_process and heart_beat_process.is_alive():
-                heart_beat_process.kill()
+            heart_beat_stop_flag.set()
             time.sleep(60)
         finally:
-            if heart_beat_process and heart_beat_process.is_alive():
-                heart_beat_process.kill()
+            if not heart_beat_stop_flag.is_set():
+                heart_beat_stop_flag.set()
 
 
 def run(activity_arn, s3_bucket_name, region):

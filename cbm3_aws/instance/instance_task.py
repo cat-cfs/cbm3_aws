@@ -14,14 +14,15 @@ from cbm3_aws.s3_io import S3IO
 
 
 class HeartBeatThread(Thread):
-    def __init__(self, event, interval):
+    def __init__(self, event, interval, target_func):
         Thread.__init__(self)
         self.stopped = event
         self.interval = interval
+        self.target_func = target_func
 
-    def begin(self, client, task_token):
+    def run(self, client, task_token):
         while not self.stopped.wait(self.interval):
-            client.send_task_heartbeat(taskToken=task_token)
+            self.target_func()
 
 
 def worker(activity_arn, s3_bucket_name, region_name):
@@ -76,8 +77,11 @@ def worker(activity_arn, s3_bucket_name, region_name):
 def process_task(client, task_token, task_input, s3_bucket_name):
     try:
         heart_beat_stop_flag = Event()
-        heart_beat_thread = HeartBeatThread(heart_beat_stop_flag, 40)
-        heart_beat_thread.begin(client, task_token)
+        heart_beat_thread = HeartBeatThread(
+            heart_beat_stop_flag, 40,
+            target_func=lambda:
+                client.send_task_heartbeat(taskToken=task_token))
+        heart_beat_thread.start()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             s3_working_dir = os.path.join(temp_dir, "s3_working")
@@ -94,7 +98,7 @@ def process_task(client, task_token, task_input, s3_bucket_name):
             os.makedirs(cbm3_working_dir)
 
             instance_cbm3_task.run_tasks(
-                task_message=task_input["simulations"],
+                simulation_tasks=task_input["simulations"],
                 local_working_dir=cbm3_working_dir,
                 s3_io=s3_io)
 

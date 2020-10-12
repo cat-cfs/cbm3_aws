@@ -71,7 +71,7 @@ def worker(activity_arn, s3_bucket_name, region_name):
 
         task_token = get_activity_task_response["taskToken"]
         task_input = json.loads(get_activity_task_response["input"])
-        process_task(client, task_token, task_input, s3_bucket_name)
+        process_task(client, task_token, task_input["Input"], s3_bucket_name)
 
 
 def process_task(client, task_token, task_input, s3_bucket_name):

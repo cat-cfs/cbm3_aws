@@ -70,9 +70,9 @@ def cleanup(resource_description):
         roles.delete_policy(
             client=iam_client,
             policy_context=rd.state_machine_policy_context)
-    if "s3_bucket_policy_context" in rd:
+    if "ec2_worker_policy" in rd:
         roles.delete_policy(
-            client=iam_client, policy_context=rd.s3_bucket_policy_context)
+            client=iam_client, policy_context=rd.ec2_worker_policy)
 
     logger.info("drop roles")
     if "state_machine_role_context" in rd:
@@ -124,7 +124,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
 
         account_number = __get_account_number(sts_client)
         logger.info("creating policies")
-        rd.s3_bucket_policy_context = roles.create_s3_bucket_policy(
+        rd.ec2_worker_policy = roles.create_ec2_worker_policy(
             client=iam_client, s3_bucket_name=rd.s3_bucket_name,
             names=rd.names)
         rd.state_machine_policy_context = roles.create_state_machine_policy(
@@ -134,8 +134,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         rd.instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
             policy_context_list=[
-                rd.s3_bucket_policy_context,
-                rd.state_machine_policy_context],
+                rd.ec2_worker_policy],
             names=rd.names)
 
         logger.info("creating state machine role")
@@ -143,6 +142,14 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
             client=iam_client,
             policy_context_list=[rd.state_machine_policy_context],
             names=rd.names)
+
+        # https://github.com/hashicorp/terraform/issues/15341
+        # need to add a delay for the iam changes above to be processed
+        # internally by AWS
+        wait_time = 20
+        logger.info(
+            f"waiting {wait_time} seconds for changes to take effect on AWS")
+        time.sleep(wait_time)
 
         logger.info("creating state machine")
         rd.state_machine_context = step_functions.create_state_machines(
@@ -157,14 +164,6 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
 
         iam_instance_profile_arn = \
             rd.instance_iam_role_context.instance_profile_arn
-
-        # https://github.com/hashicorp/terraform/issues/15341
-        # need to add a delay for the iam changes above to be processed
-        # internally by AWS
-        wait_time = 20
-        logger.info(
-            f"waiting {wait_time} seconds for changes to take effect on AWS")
-        time.sleep(wait_time)
 
         logger.info("creating launch template")
         rd.launch_template_context = autoscale_group.create_launch_template(

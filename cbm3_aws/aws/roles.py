@@ -63,35 +63,40 @@ def create_state_machine_policy(client, account_number, names):
     Returns:
         namespace: object containing the policy ARN
     """
-    prefix = f"arn:aws:states:*:{account_number}"
-    resource_arn_list = [
-        f"{prefix}:activity:{names.run_activity}",
-        f"{prefix}:stateMachine:{names.run_state_machine}",
-        f"{prefix}:execution:{names.run_state_machine}:*",
-        f"{prefix}:stateMachine:{names.run_task_state_machine}",
-        f"{prefix}:execution:{names.run_task_state_machine}:*"
-    ]
 
+    # see:
+    # https://docs.aws.amazon.com/step-functions/latest/dg/stepfunctions-iam.html
     policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
-                "Sid": "0",
                 "Effect": "Allow",
                 "Action": [
-                    "states:SendTaskSuccess",
-                    "states:ListStateMachines",
-                    "states:SendTaskFailure",
-                    "states:ListActivities",
-                    "states:SendTaskHeartbeat"
+                    "states:StartExecution"
+                ],
+                "Resource": [
+                    f"arn:aws:states:*:{account_number}:stateMachine:*"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "states:DescribeExecution",
+                    "states:StopExecution"
                 ],
                 "Resource": "*"
             },
             {
-                "Sid": "1",
                 "Effect": "Allow",
-                "Action": "states:*",
-                "Resource": resource_arn_list
+                "Action": [
+                    "events:PutTargets",
+                    "events:PutRule",
+                    "events:DescribeRule"
+                ],
+                "Resource": [
+                    f"arn:aws:events:*:{account_number}:"
+                    "rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
+                ]
             }
         ]
     }
@@ -103,9 +108,11 @@ def create_state_machine_policy(client, account_number, names):
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
-def create_s3_bucket_policy(client, s3_bucket_name, names):
-    """Create a policy object for permitting put/get/delete operations on the
-    specified named bucket
+def create_ec2_worker_policy(client, s3_bucket_name, names):
+    """Create a policy object for:
+        1. permitting put/get/delete operations on the
+           specified named bucket
+        2. interact with activity tasks for the cbm3_aws state machine
 
     Args:
         client (IAM.client): boto3 IAM client
@@ -128,6 +135,24 @@ def create_s3_bucket_policy(client, s3_bucket_name, names):
                     "s3:DeleteObject"
                 ],
                 "Resource": f"arn:aws:s3:::{s3_bucket_name}/*"
+            },
+            {
+                "Sid": "1",
+                "Effect": "Allow",
+                "Action": "states:GetActivityTask",
+                "Resource": "arn:aws:states:*:222547609937:activity:"
+                            f"{names.run_activity}"
+            },
+            {
+                "Sid": "2",
+                "Effect": "Allow",
+                "Action": [
+                    "states:SendTaskSuccess",
+                    "states:SendTaskFailure",
+                    "states:ListActivities",
+                    "states:SendTaskHeartbeat"
+                ],
+                "Resource": "*"
             }
         ]
     }
@@ -136,7 +161,8 @@ def create_s3_bucket_policy(client, s3_bucket_name, names):
         PolicyName=names.instance_s3_policy,
         Path='/',
         PolicyDocument=json.dumps(policy),
-        Description='grants basic access to a particular s3 bucket for '
+        Description='grants read/write/delete access to a particular s3 '
+                    'bucket and step function activity tasks access for '
                     'IAM instance role')
 
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])

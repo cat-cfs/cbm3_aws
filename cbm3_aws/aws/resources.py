@@ -126,7 +126,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         logger.info("creating policies")
         rd.ec2_worker_policy = roles.create_ec2_worker_policy(
             client=iam_client, s3_bucket_name=rd.s3_bucket_name,
-            names=rd.names)
+            account_number=account_number, names=rd.names)
         rd.state_machine_policy_context = roles.create_state_machine_policy(
             client=iam_client, account_number=account_number, names=rd.names)
 

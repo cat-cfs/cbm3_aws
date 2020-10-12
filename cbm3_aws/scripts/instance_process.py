@@ -27,7 +27,7 @@ def main():
 
         instance_task.run(
             activity_arn=args.activity_arn, s3_bucket_name=args.s3_bucket_name,
-            region=args.region_name)
+            region_name=args.region_name)
     except Exception:
         logger.exception("")
 

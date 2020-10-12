@@ -11,6 +11,7 @@ with open('requirements.txt') as f:
 
 console_scripts = [
     "cbm3_aws_instance = cbm3_aws.scripts.run_instance:main",
+    "cbm3_aws_instance_process = cbm3_aws.scripts.instance_process:main",
     "cbm3_aws_deploy = cbm3_aws.scripts.aws_deploy:main",
     "cbm3_aws_cleanup = cbm3_aws.scripts.aws_cleanup:main",
     "cbm3_aws_start_execution = cbm3_aws.scripts.start_execution:main",
@@ -23,7 +24,7 @@ package_data = [
 ]
 setup(
     name="cbm3_aws",
-    version="0.6.2",
+    version="0.6.3",
     description="Scripts for running CBM3 simulations on AWS",
     keywords=["cbm-cfs3", "AWS"],
     long_description=long_description,

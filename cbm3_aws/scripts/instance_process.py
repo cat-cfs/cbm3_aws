@@ -1,13 +1,12 @@
-import psutil
-import subprocess
 from argparse import ArgumentParser
 from cbm3_aws import log_helper
+from cbm3_aws.instance import instance_task
 
 
 def main():
-    log_helper.start_logging("run_instance", level="INFO")
-    logger = log_helper.get_logger("run_instance")
-    logger.info("run_instance start up")
+    log_helper.start_logging("instance_process", level="INFO")
+    logger = log_helper.get_logger("instance_process")
+    logger.info("instance_process start up")
 
     parser = ArgumentParser(
         description="Run the cbm3_aws instance task")
@@ -26,16 +25,9 @@ def main():
         args = parser.parse_args()
         logger.info(vars(args))
 
-        num_workers = psutil.cpu_count()
-        for _ in range(num_workers):
-            args = [
-                "cbm3_aws_instance_process"
-                "--activity_arn", args.activity_arn,
-                "--s3_bucket_name", args.s3_bucket_name,
-                "--region_name", args.region_name,
-            ]
-            subprocess.Popen(args)
-
+        instance_task.run(
+            activity_arn=args.activity_arn, s3_bucket_name=args.s3_bucket_name,
+            region=args.region_name)
     except Exception:
         logger.exception("")
 

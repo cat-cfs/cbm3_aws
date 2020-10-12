@@ -16,6 +16,7 @@ def get_state_machine(cbm_run_task_activity_arn):
                 "Catch": [
                     {
                         "ErrorEquals": ["States.Timeout"],
+                        "ResultPath": None,
                         "Next": "DelayThenRestart"
                     }
                 ]

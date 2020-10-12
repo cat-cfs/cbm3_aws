@@ -3,9 +3,7 @@ import json
 import time
 import tempfile
 import traceback
-import psutil
 from threading import Thread, Event
-from concurrent.futures import ProcessPoolExecutor
 import boto3
 from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task

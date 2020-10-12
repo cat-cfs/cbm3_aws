@@ -121,10 +121,3 @@ def process_task(client, task_token, task_input, s3_bucket_name):
     finally:
         if not heart_beat_stop_flag.is_set():
             heart_beat_stop_flag.set()
-
-
-def run(activity_arn, s3_bucket_name, region):
-    num_workers = psutil.cpu_count()
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        for _ in range(num_workers):
-            executor.submit(worker, activity_arn, s3_bucket_name, region)

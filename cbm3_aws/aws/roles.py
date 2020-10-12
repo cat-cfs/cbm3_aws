@@ -108,7 +108,7 @@ def create_state_machine_policy(client, account_number, names):
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
-def create_ec2_worker_policy(client, s3_bucket_name, names):
+def create_ec2_worker_policy(client, s3_bucket_name, account_number, names):
     """Create a policy object for:
         1. permitting put/get/delete operations on the
            specified named bucket
@@ -140,7 +140,7 @@ def create_ec2_worker_policy(client, s3_bucket_name, names):
                 "Sid": "1",
                 "Effect": "Allow",
                 "Action": "states:GetActivityTask",
-                "Resource": "arn:aws:states:*:222547609937:activity:"
+                "Resource": f"arn:aws:states:*:{account_number}:activity:"
                             f"{names.run_activity}"
             },
             {
@@ -153,6 +153,19 @@ def create_ec2_worker_policy(client, s3_bucket_name, names):
                     "states:SendTaskHeartbeat"
                 ],
                 "Resource": "*"
+            },
+            {
+                "Sid": "3",
+                "Effect": "Allow",
+                "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:PutLogEvents"
+                ],
+                "Resource": [
+                    f"arn:aws:logs:*:{account_number}:log-group:cbm3_aws",
+                    f"arn:aws:logs:*:{account_number}:log-group:cbm3_aws:log-stream:*"
+                ]
             }
         ]
     }

@@ -31,7 +31,7 @@ def __valid_token(get_activity_task_response):
         get_activity_task_response["taskToken"]
 
 
-def worker(activity_arn, s3_bucket_name, region_name):
+def run(activity_arn, s3_bucket_name, region_name):
     """Run a worker persistently on a single thread.
 
     The worker will call get_activity_task repeatedly with delayed retries

@@ -22,7 +22,7 @@ def get_state_machine(task_state_machine_arn, max_concurrency):
                             "Parameters": {
                                 "StateMachineArn": task_state_machine_arn,
                                 "Input": {
-                                    "Input.$": "$$.Input",
+                                    "Input.$": "$.Input",
                                     "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
                                 }
                             },

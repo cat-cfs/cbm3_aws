@@ -1,6 +1,6 @@
 import os
 
-from cbm3_python.simulation.concurrent_runner import ConcurrentRunner
+from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
 
 
@@ -93,9 +93,8 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
             "dist_rules_path": disturbance_rules_path
         })
 
-    concurrent_runner = ConcurrentRunner(toolbox_env_path)
-    for arg in args_list:
-        concurrent_runner.run_func(arg)
+    list(projectsimulator.run_concurrent(
+        args_list, toolbox_env_path))
 
     for task in tasks:
         s3_io.upload(

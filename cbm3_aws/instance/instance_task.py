@@ -20,9 +20,15 @@ class HeartBeatThread(Thread):
         self.interval = interval
         self.target_func = target_func
 
-    def run(self, client, task_token):
+    def run(self):
         while not self.stopped.wait(self.interval):
             self.target_func()
+
+
+def __valid_token(get_activity_task_response):
+    return \
+        "taskToken" in get_activity_task_response and \
+        get_activity_task_response["taskToken"]
 
 
 def worker(activity_arn, s3_bucket_name, region_name):
@@ -59,11 +65,11 @@ def worker(activity_arn, s3_bucket_name, region_name):
             activityArn=activity_arn)
 
         retry_interval = 30
-        if not get_activity_task_response["taskToken"]:
+        if not __valid_token(get_activity_task_response):
             time.sleep(retry_interval)
             # If there is a null task token it means there is no task
             # available. Sleep the worker and try again
-            while not get_activity_task_response["taskToken"]:
+            while not __valid_token(get_activity_task_response):
 
                 get_activity_task_response = client.get_activity_task(
                     activityArn=activity_arn)
@@ -78,7 +84,7 @@ def process_task(client, task_token, task_input, s3_bucket_name):
     try:
         heart_beat_stop_flag = Event()
         heart_beat_thread = HeartBeatThread(
-            heart_beat_stop_flag, 40,
+            heart_beat_stop_flag, 25,
             target_func=lambda:
                 client.send_task_heartbeat(taskToken=task_token))
         heart_beat_thread.start()

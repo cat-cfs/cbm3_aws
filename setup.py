@@ -24,7 +24,7 @@ package_data = [
 ]
 setup(
     name="cbm3_aws",
-    version="0.6.4",
+    version="0.6.5",
     description="Scripts for running CBM3 simulations on AWS",
     keywords=["cbm-cfs3", "AWS"],
     long_description=long_description,

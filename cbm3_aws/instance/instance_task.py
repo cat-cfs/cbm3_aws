@@ -102,15 +102,20 @@ def run(process_index, activity_arn, s3_bucket_name, region_name):
         logger.exception("")
 
 
+def get_heart_beat_func(client, task_token, logger):
+    def hear_beat():
+        logger.info("heartbeat")
+        client.send_task_heartbeat(taskToken=task_token)
+    return hear_beat
+
+
 def process_task(client, task_token, task_input, s3_bucket_name, logger):
     try:
-        def heart_beat_func(client, logger):
-            logger.info("heartbeat")
-            client.send_task_heartbeat(taskToken=task_token)
 
         heart_beat_stop_flag = Event()
         heart_beat_thread = HeartBeatThread(
-            heart_beat_stop_flag, 25, target_func=heart_beat_func)
+            heart_beat_stop_flag, 25,
+            target_func=get_heart_beat_func(client, task_token, logger))
         heart_beat_thread.start()
 
         with tempfile.TemporaryDirectory() as temp_dir:

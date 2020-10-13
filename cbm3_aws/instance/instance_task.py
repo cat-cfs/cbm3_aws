@@ -3,8 +3,11 @@ import json
 import time
 import tempfile
 import traceback
+import logging
 from threading import Thread, Event
 import boto3
+import watchtower
+from ec2_metadata import ec2_metadata
 from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task
 from cbm3_aws.s3_interface import S3Interface
@@ -29,7 +32,7 @@ def __valid_token(get_activity_task_response):
         get_activity_task_response["taskToken"]
 
 
-def run(activity_arn, s3_bucket_name, region_name):
+def run(process_index, activity_arn, s3_bucket_name, region_name):
     """Run a worker persistently on a single thread.
 
     The worker will call get_activity_task repeatedly with delayed retries
@@ -50,6 +53,16 @@ def run(activity_arn, s3_bucket_name, region_name):
         region_name (string): AWS region name
     """
 
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("cbm3_aws.instance.instance_task")
+    boto3_session = boto3.session.Session(region_name=region_name)
+    instance_id = ec2_metadata.instance_id
+    cloud_watch_log_handler = watchtower.CloudWatchLogHandler(
+        log_group="cbm3_aws",
+        stream_name=f"{instance_id}/process{process_index}",
+        boto3_session=boto3_session)
+    logger.addHandler(cloud_watch_log_handler)
+
     # config here is based on the AWS recommendation found in the boto
     # docs, and the pull request here:
     # https://github.com/boto/botocore/pull/634
@@ -57,34 +70,47 @@ def run(activity_arn, s3_bucket_name, region_name):
         'stepfunctions', region_name=region_name,
         config=Config(connect_timeout=65, read_timeout=65))
 
-    while True:
-
-        get_activity_task_response = client.get_activity_task(
-            activityArn=activity_arn)
-
-        retry_interval = 30
-        if not __valid_token(get_activity_task_response):
-            time.sleep(retry_interval)
-            # If there is a null task token it means there is no task
-            # available. Sleep the worker and try again
-            while not __valid_token(get_activity_task_response):
-
-                get_activity_task_response = client.get_activity_task(
-                    activityArn=activity_arn)
-                time.sleep(retry_interval)
-
-        task_token = get_activity_task_response["taskToken"]
-        task_input = json.loads(get_activity_task_response["input"])
-        process_task(client, task_token, task_input["Input"], s3_bucket_name)
-
-
-def process_task(client, task_token, task_input, s3_bucket_name):
     try:
+        while True:
+
+            logger.info("get_activity_task")
+            get_activity_task_response = client.get_activity_task(
+                activityArn=activity_arn)
+
+            retry_interval = 30
+            if not __valid_token(get_activity_task_response):
+                time.sleep(retry_interval)
+                logger.info("no activity task, retrying")
+                # If there is a null task token it means there is no task
+                # available. Sleep the worker and try again
+                while not __valid_token(get_activity_task_response):
+
+                    get_activity_task_response = client.get_activity_task(
+                        activityArn=activity_arn)
+                    time.sleep(retry_interval)
+                    logger.info("no activity task, retrying")
+
+            task_token = get_activity_task_response["taskToken"]
+            logger.info(f"got activity task, task_token {task_token}")
+            task_input = json.loads(get_activity_task_response["input"])
+            logger.info(dict(input=task_input))
+            process_task(
+                client, task_token, task_input["Input"], s3_bucket_name,
+                logger)
+
+    except Exception:
+        logger.exception("")
+
+
+def process_task(client, task_token, task_input, s3_bucket_name, logger):
+    try:
+        def heart_beat_func(client, logger):
+            logger.info("heartbeat")
+            client.send_task_heartbeat(taskToken=task_token)
+
         heart_beat_stop_flag = Event()
         heart_beat_thread = HeartBeatThread(
-            heart_beat_stop_flag, 25,
-            target_func=lambda:
-                client.send_task_heartbeat(taskToken=task_token))
+            heart_beat_stop_flag, 25, target_func=heart_beat_func)
         heart_beat_thread.start()
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -100,11 +126,12 @@ def process_task(client, task_token, task_input, s3_bucket_name):
 
             cbm3_working_dir = os.path.join(temp_dir, "cbm3_working")
             os.makedirs(cbm3_working_dir)
-
+            logger.info("starting simulations")
             instance_cbm3_task.run_tasks(
                 simulation_tasks=task_input["simulations"],
                 local_working_dir=cbm3_working_dir,
-                s3_io=s3_io)
+                s3_io=s3_io,
+                logger=logger)
 
         client.send_task_success(
             taskToken=task_token,

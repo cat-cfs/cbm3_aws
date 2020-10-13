@@ -30,7 +30,7 @@ def main():
         for i in range(num_workers):
             args = [
                 "cbm3_aws_instance_process",
-                "--process_index", i,
+                "--process_index", str(i),
                 "--activity_arn", args.activity_arn,
                 "--s3_bucket_name", args.s3_bucket_name,
                 "--region_name", args.region_name

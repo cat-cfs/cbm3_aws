@@ -154,7 +154,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         logger.info("creating state machine")
         rd.state_machine_context = step_functions.create_state_machines(
             client=sfn_client, role_arn=rd.state_machine_role_context.role_arn,
-            max_concurrency=rd.max_instances, names=rd.names)
+            names=rd.names)
 
         logger.info("creating userdata")
         rd.user_data = create_userdata(

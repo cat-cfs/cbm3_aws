@@ -1,7 +1,7 @@
 import json
 
 
-def get_state_machine(task_state_machine_arn, max_concurrency):
+def get_state_machine(task_state_machine_arn):
     return json.dumps({
         "Comment": "Task to launch CBM run task state machines",
         "StartAt": "map_tasks",
@@ -9,7 +9,6 @@ def get_state_machine(task_state_machine_arn, max_concurrency):
             "map_tasks": {
                 "Type": "Map",
                 "ItemsPath": "$.task_list",
-                "MaxConcurrency": int(max_concurrency),
                 "Parameters": {
                     "Input.$": "$$.Map.Item.Value"
                 },

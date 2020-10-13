@@ -12,6 +12,9 @@ def main():
         description="Run the cbm3_aws instance task")
 
     parser.add_argument(
+        "--process_index", required=True, type=int,
+        help="integer to identify this process on an instance")
+    parser.add_argument(
         "--activity_arn", required=True,
         help="Amazon Resource Name for a AWS step functions activity")
     parser.add_argument(
@@ -26,8 +29,8 @@ def main():
         logger.info(vars(args))
 
         instance_task.run(
-            activity_arn=args.activity_arn, s3_bucket_name=args.s3_bucket_name,
-            region_name=args.region_name)
+            process_index=args.process_index, activity_arn=args.activity_arn,
+            s3_bucket_name=args.s3_bucket_name, region_name=args.region_name)
     except Exception:
         logger.exception("")
 

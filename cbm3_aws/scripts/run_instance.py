@@ -27,12 +27,13 @@ def main():
         logger.info(vars(args))
 
         num_workers = psutil.cpu_count()
-        for _ in range(num_workers):
+        for i in range(num_workers):
             args = [
                 "cbm3_aws_instance_process",
+                "--process_index", i,
                 "--activity_arn", args.activity_arn,
                 "--s3_bucket_name", args.s3_bucket_name,
-                "--region_name", args.region_name,
+                "--region_name", args.region_name
             ]
             subprocess.Popen(args)
 

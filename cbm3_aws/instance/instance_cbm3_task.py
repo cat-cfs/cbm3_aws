@@ -4,7 +4,7 @@ from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
 
 
-def run_tasks(simulation_tasks, local_working_dir, s3_io):
+def run_tasks(simulation_tasks, local_working_dir, s3_io, logger):
     """Runs a CBM3 project simulation task
 
         :: Example simulation_tasks
@@ -22,9 +22,11 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
             simulation
         s3_io (cbm3_aws.s3_io.S3IO) object for managing cbm3_aws
             uploads and downloads for AWS S3
+        logger (logging.Logger): logger for this EC2 instance
     """
 
     # download resources
+    logger.info("download resources")
     toolbox_env_path = os.path.join(
         local_working_dir, "toolbox_env")
     s3_io.download(
@@ -53,6 +55,7 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
     disturbance_classes_path = os.path.join(
         stand_recovery_rules_dir, "99b_disturbance_classes.csv")
 
+    logger.info("download projects")
     # download projects
     local_project_dir = os.path.join(local_working_dir, "projects")
     if not os.path.exists(local_project_dir):
@@ -93,10 +96,16 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
             "dist_rules_path": disturbance_rules_path
         })
 
+    logger.info("starting CBM3 simulations")
+    logger.info(dict(tasks=args_list))
     list(projectsimulator.run_concurrent(
         args_list, toolbox_env_path))
+    logger.info("CBM3 simulations finished")
 
+    logger.info("Upload results")
     for task in tasks:
+        logger.info(dict(
+            project_code=task.project_code, simulation_id=task.simulation_id))
         s3_io.upload(
             local_path=task.results_database_path, s3_key="results",
             project_code=task.project_code, simulation_id=task.simulation_id)
@@ -109,6 +118,7 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io):
             local_path=os.path.dirname(task.tempfiles_output_dir),
             s3_key="tempfiles",
             project_code=task.project_code, simulation_id=task.simulation_id)
+    logger.info("CBM3 tasks finished")
 
 
 def iterate_tasks(task_message, local_projects, local_results_dir):

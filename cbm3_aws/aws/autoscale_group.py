@@ -150,7 +150,7 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
             'LaunchTemplate': {
                 'LaunchTemplateSpecification': {
                     'LaunchTemplateId':
-                        launch_template_context.launch_template_id,
+                        launch_template_context.launch_template_id
                 },
                 'Overrides': [
                     {
@@ -192,17 +192,16 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
                     {
                         'InstanceType': 'm4.10xlarge',
                         'WeightedCapacity': '40'
-                    }
-                ],
-                'InstancesDistribution': {
-                    # prioritized by the order of the above overrides list
-                    'OnDemandAllocationStrategy': 'prioritized',
-                    # minimum number of On demand instances
-                    'OnDemandBaseCapacity': 0,
-                    # percent of on demand versus spot instances
-                    'OnDemandPercentageAboveBaseCapacity': 0,
-                    'SpotAllocationStrategy': 'capacity-optimized',
-                }
+                    }],
+                },
+            'InstancesDistribution': {
+                # prioritized by the order of the above overrides list
+                'OnDemandAllocationStrategy': 'prioritized',
+                # minimum number of On demand instances
+                'OnDemandBaseCapacity': 0,
+                # percent of on demand versus spot instances
+                'OnDemandPercentageAboveBaseCapacity': 0,
+                'SpotAllocationStrategy': 'capacity-optimized',
             }
         },
         MinSize=min_size,

@@ -167,7 +167,7 @@ def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
         logger.info("creating launch template")
         rd.launch_template_context = autoscale_group.create_launch_template(
             client=ec2_client, name=rd.names.autoscale_launch_template,
-            image_ami_id=rd.image_ami_id, instance_type=rd.instance_type,
+            image_ami_id=rd.image_ami_id,
             iam_instance_profile_arn=iam_instance_profile_arn,
             user_data=rd.user_data)
 

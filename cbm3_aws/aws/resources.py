@@ -85,8 +85,8 @@ def cleanup(resource_description):
             client=iam_client, role_context=rd.instance_iam_role_context)
 
 
-def deploy(region_name, s3_bucket_name, min_instances, max_instances,
-           image_ami_id, instance_type, resource_description_path):
+def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
+           image_ami_id, resource_description_path):
 
     if os.path.exists(resource_description_path):
         raise ValueError(
@@ -100,10 +100,9 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
     rd.names = get_names(rd.uuid)
     rd.region_name = region_name
     rd.s3_bucket_name = s3_bucket_name
-    rd.min_instances = int(min_instances)
-    rd.max_instances = int(max_instances)
+    rd.min_virtual_cpu = int(min_virtual_cpu)
+    rd.max_virtual_cpu = int(max_virtual_cpu)
     rd.image_ami_id = image_ami_id
-    rd.instance_type = instance_type
 
     try:
         logger.info("connecting")
@@ -180,7 +179,7 @@ def deploy(region_name, s3_bucket_name, min_instances, max_instances,
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(
             client=auto_scale_client, name=rd.names.autoscale_group,
             launch_template_context=rd.launch_template_context,
-            min_size=rd.min_instances, max_size=rd.max_instances,
+            min_size=rd.min_virtual_cpu, max_size=rd.max_virtual_cpu,
             availability_zones=availability_zones)
 
         return rd

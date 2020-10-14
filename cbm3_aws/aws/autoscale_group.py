@@ -15,7 +15,7 @@ def delete_launch_template(client, context):
         LaunchTemplateId=context.launch_template_id)
 
 
-def create_launch_template(client, name, image_ami_id, instance_type,
+def create_launch_template(client, name, image_ami_id,
                            iam_instance_profile_arn, user_data):
     """Create a launch template for provisioning instances
 
@@ -23,8 +23,6 @@ def create_launch_template(client, name, image_ami_id, instance_type,
         client (EC2.Client): boto3 ec2 client
         name (str): the name of the launch template
         image_ami_id (str): the ami id for the launched instances
-        instance_type (str): the type of the instance to launch
-            (ex. 't1.micro')
         iam_instance_profile_arn (str): ARN for for the Iam instance profile
             to attach to launched instances
         user_data (str): line break seperated commands to run on instance start
@@ -44,7 +42,6 @@ def create_launch_template(client, name, image_ami_id, instance_type,
                 'Arn': iam_instance_profile_arn,
             },
             'ImageId': image_ami_id,
-            'InstanceType': instance_type,
             'Monitoring': {
                 'Enabled': True
             },
@@ -133,9 +130,9 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
         name (str): the name of the autoscaling group
         launch_template_context (object): Return value of:
             :py:func:`create_launch_template`
-        min_size (int): minimum number of instances to run in auto scaling
+        min_size (int): minimum number of threads to run in auto scaling
             group.
-        max_size (int): maximum number of instances to run in auto scaling
+        max_size (int): maximum number of threads to run in auto scaling
             group.
         availability_zones (list): the list of availability zones for the
             autoscaling group.
@@ -145,8 +142,64 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
     """
     client.create_auto_scaling_group(
         AutoScalingGroupName=name,
-        LaunchTemplate={
-            'LaunchTemplateId': launch_template_context.launch_template_id,
+        MixedInstancesPolicy={
+            'LaunchTemplate': {
+                'LaunchTemplateSpecification': {
+                    'LaunchTemplateId':
+                        launch_template_context.launch_template_id,
+                },
+                'Overrides': [
+                    {
+                        'InstanceType': 'm5.large',
+                        'WeightedCapacity': '2'
+                    },
+                    {
+                        'InstanceType': 'm5.xlarge',
+                        'WeightedCapacity': '4'
+                    },
+                    {
+                        'InstanceType': 'm5.2xlarge',
+                        'WeightedCapacity': '8'
+                    },
+                    {
+                        'InstanceType': 'm5.4xlarge',
+                        'WeightedCapacity': '16'
+                    },
+                    {
+                        'InstanceType': 'm5.8xlarge',
+                        'WeightedCapacity': '32'
+                    },
+                    {
+                        'InstanceType': 'm4.large',
+                        'WeightedCapacity': '2'
+                    },
+                    {
+                        'InstanceType': 'm4.xlarge',
+                        'WeightedCapacity': '4'
+                    },
+                    {
+                        'InstanceType': 'm4.2xlarge',
+                        'WeightedCapacity': '8'
+                    },
+                    {
+                        'InstanceType': 'm4.4xlarge',
+                        'WeightedCapacity': '16'
+                    },
+                    {
+                        'InstanceType': 'm4.10xlarge',
+                        'WeightedCapacity': '40'
+                    }
+                ],
+                'InstancesDistribution': {
+                    # prioritized by the order of the above overrides list
+                    'OnDemandAllocationStrategy': 'prioritized',
+                    # minimum number of On demand instances
+                    'OnDemandBaseCapacity': 0,
+                    # percent of on demand versus spot instances
+                    'OnDemandPercentageAboveBaseCapacity': 0,
+                    'SpotAllocationStrategy': 'capacity-optimized',
+                }
+            }
         },
         MinSize=min_size,
         MaxSize=max_size,

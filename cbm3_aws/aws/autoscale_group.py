@@ -207,8 +207,7 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
         MinSize=min_size,
         MaxSize=max_size,
         TerminationPolicies=["NewestInstance"],
-        NewInstancesProtectedFromScaleIn=False,
-        AvailabilityZones=availability_zones)
+        NewInstancesProtectedFromScaleIn=False)
 
     if availability_zones:
         kwargs["AvailabilityZones"] = availability_zones

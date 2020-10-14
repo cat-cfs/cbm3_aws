@@ -98,8 +98,11 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io, logger):
 
     logger.info("starting CBM3 simulations")
     logger.info(dict(tasks=args_list))
+    # max_workers=1 here since this script is currently run as one of many
+    # duplicate processes.  If we add further conncurrency here it will
+    # make the worker too busy.
     list(projectsimulator.run_concurrent(
-        args_list, toolbox_env_path))
+        args_list, toolbox_env_path, max_workers=1))
     logger.info("CBM3 simulations finished")
 
     logger.info("Upload results")

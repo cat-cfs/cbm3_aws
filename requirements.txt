@@ -3,4 +3,4 @@ watchtower
 ec2-metadata
 shortuuid
 psutil
-cbm3_python>=0.6.8
+cbm3_python>=0.6.9

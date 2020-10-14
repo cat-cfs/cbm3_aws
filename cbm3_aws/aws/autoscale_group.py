@@ -122,7 +122,8 @@ def get_availability_zones(client):
 
 
 def create_autoscaling_group(client, name, launch_template_context, min_size,
-                             max_size, availability_zones):
+                             max_size, availability_zones=None,
+                             vpc_zone_identifier=None):
     """Create an autoscaling group to manage spot instances.
 
     Args:
@@ -136,11 +137,14 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
             group.
         availability_zones (list): the list of availability zones for the
             autoscaling group.
+        vpc_zone_identifier (str): A comma-separated list of subnet IDs
+            for your virtual private cloud (VPC).
 
     Returns:
         object: autoscaling group context
     """
-    client.create_auto_scaling_group(
+
+    kwargs = dict(
         AutoScalingGroupName=name,
         MixedInstancesPolicy={
             'LaunchTemplate': {
@@ -205,8 +209,15 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
         MaxSize=max_size,
         TerminationPolicies=["NewestInstance"],
         NewInstancesProtectedFromScaleIn=False,
-        AvailabilityZones=availability_zones
-    )
+        AvailabilityZones=availability_zones)
+
+    if availability_zones:
+        kwargs["AvailabilityZones"] = availability_zones
+    if vpc_zone_identifier:
+        kwargs["VPCZoneIdentifier"] = vpc_zone_identifier
+
+    client.create_auto_scaling_group(**kwargs)
+
     return Namespace(
         auto_scaling_group_name=name)
 

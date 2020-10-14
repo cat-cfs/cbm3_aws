@@ -29,6 +29,11 @@ def main():
         "--resource_description_path", required=True,
         help="path to a writeable filepath but not existing file path for "
              "recording information for the allocated AWS resources")
+    parser.add_argument(
+        "--vpc_zone_identifier", required=False,
+        help="A comma-separated list of subnet IDs for your virtual private "
+             "cloud (VPC). This is required if no default VPC is set in your "
+             "AWS account/region")
 
     log_helper.start_logging("aws_deploy", level="INFO")
     logger = log_helper.get_logger("aws_deploy")
@@ -46,7 +51,8 @@ def main():
             max_virtual_cpu=args.max_virtual_cpu,
             image_ami_id=args.image_ami_id,
             resource_description_path=os.path.abspath(
-                args.resource_description_path))
+                args.resource_description_path),
+            vpc_zone_identifier=args.vpc_zone_identifier)
     except Exception:
         logger.exception("")
 

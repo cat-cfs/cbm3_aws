@@ -86,7 +86,7 @@ def cleanup(resource_description):
 
 
 def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
-           image_ami_id, resource_description_path):
+           image_ami_id, resource_description_path, vpc_zone_identifier=None):
 
     if os.path.exists(resource_description_path):
         raise ValueError(
@@ -171,16 +171,19 @@ def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
             iam_instance_profile_arn=iam_instance_profile_arn,
             user_data=rd.user_data)
 
-        logger.info("getting availability zones")
-        availability_zones = autoscale_group.get_availability_zones(
-            client=ec2_client)
+        availability_zones = None
+        if not vpc_zone_identifier:
+            logger.info("getting availability zones")
+            availability_zones = autoscale_group.get_availability_zones(
+                client=ec2_client)
         logger.info(f"using zones: {availability_zones}")
         logger.info(f"create autoscaling group")
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(
             client=auto_scale_client, name=rd.names.autoscale_group,
             launch_template_context=rd.launch_template_context,
             min_size=rd.min_virtual_cpu, max_size=rd.max_virtual_cpu,
-            availability_zones=availability_zones)
+            availability_zones=availability_zones,
+            vpc_zone_identifier=vpc_zone_identifier)
 
         return rd
 

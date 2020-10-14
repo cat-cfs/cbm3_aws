@@ -66,15 +66,7 @@ def create_launch_template(client, name, image_ami_id,
                         },
                     ]
                 },
-            ],
-            'InstanceMarketOptions': {
-                'MarketType': 'spot',
-                'SpotOptions': {
-                    # 'MaxPrice': 'string', # up to the default on-demand price
-                    'SpotInstanceType': 'one-time',
-                    'InstanceInterruptionBehavior': 'terminate'
-                }
-            }
+            ]
         },
         TagSpecifications=[
             {

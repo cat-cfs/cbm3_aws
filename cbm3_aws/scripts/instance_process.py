@@ -23,6 +23,10 @@ def main():
     parser.add_argument(
         "--region_name", required=True,
         help="AWS region name")
+    parser.add_argument(
+        "--max_concurrency", required=True, type=int,
+        help="Maximum number of concurrent sub processes to run in this "
+             "instance")
 
     try:
         args = parser.parse_args()
@@ -30,7 +34,8 @@ def main():
 
         instance_task.run(
             process_index=args.process_index, activity_arn=args.activity_arn,
-            s3_bucket_name=args.s3_bucket_name, region_name=args.region_name)
+            s3_bucket_name=args.s3_bucket_name, region_name=args.region_name,
+            max_concurrency=args.max_concurrency)
     except Exception:
         logger.exception("")
 

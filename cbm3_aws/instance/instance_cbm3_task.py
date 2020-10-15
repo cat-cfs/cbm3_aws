@@ -4,7 +4,8 @@ from cbm3_python.simulation import projectsimulator
 from cbm3_aws.namespace import Namespace
 
 
-def run_tasks(simulation_tasks, local_working_dir, s3_io, logger):
+def run_tasks(simulation_tasks, local_working_dir, s3_io, logger,
+              max_concurrency):
     """Runs a CBM3 project simulation task
 
         :: Example simulation_tasks
@@ -23,6 +24,8 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io, logger):
         s3_io (cbm3_aws.s3_io.S3IO) object for managing cbm3_aws
             uploads and downloads for AWS S3
         logger (logging.Logger): logger for this EC2 instance
+        max_concurrency (int): maximum number of concurrent CBM simulations
+            spawned by this process
     """
 
     # download resources
@@ -102,7 +105,7 @@ def run_tasks(simulation_tasks, local_working_dir, s3_io, logger):
     # duplicate processes.  If we add further conncurrency here it will
     # make the worker too busy.
     list(projectsimulator.run_concurrent(
-        args_list, toolbox_env_path, max_workers=1))
+        args_list, toolbox_env_path, max_workers=max_concurrency))
     logger.info("CBM3 simulations finished")
 
     logger.info("Upload results")

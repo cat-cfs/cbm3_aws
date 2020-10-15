@@ -32,7 +32,8 @@ def __valid_token(get_activity_task_response):
         get_activity_task_response["taskToken"]
 
 
-def run(process_index, activity_arn, s3_bucket_name, region_name):
+def run(process_index, activity_arn, s3_bucket_name, region_name,
+        max_concurrency):
     """Run a worker persistently on a single thread.
 
     The worker will call get_activity_task repeatedly with delayed retries
@@ -51,6 +52,8 @@ def run(process_index, activity_arn, s3_bucket_name, region_name):
         s3_bucket_name (string): the name of the s3 bucket to get input data
             from and to upload results to
         region_name (string): AWS region name
+        max_concurrency (int): the maximum number of sub processes this
+            process will spawn
     """
 
     logging.basicConfig(level=logging.INFO)
@@ -95,8 +98,12 @@ def run(process_index, activity_arn, s3_bucket_name, region_name):
             task_input = json.loads(get_activity_task_response["input"])
             logger.info(dict(input=task_input))
             process_task(
-                client, task_token, task_input["Input"], s3_bucket_name,
-                logger)
+                client=client,
+                task_token=task_token,
+                task_input=task_input["Input"],
+                s3_bucket_name=s3_bucket_name,
+                logger=logger,
+                max_concurrency=max_concurrency)
 
     except Exception:
         logger.exception("")
@@ -109,7 +116,8 @@ def get_heart_beat_func(client, task_token, logger):
     return hear_beat
 
 
-def process_task(client, task_token, task_input, s3_bucket_name, logger):
+def process_task(client, task_token, task_input, s3_bucket_name, logger,
+                 max_concurrency):
     try:
 
         heart_beat_stop_flag = Event()
@@ -136,7 +144,8 @@ def process_task(client, task_token, task_input, s3_bucket_name, logger):
                 simulation_tasks=task_input["simulations"],
                 local_working_dir=cbm3_working_dir,
                 s3_io=s3_io,
-                logger=logger)
+                logger=logger,
+                max_concurrency=max_concurrency)
 
         client.send_task_success(
             taskToken=task_token,

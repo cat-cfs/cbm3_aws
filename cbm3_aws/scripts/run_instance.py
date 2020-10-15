@@ -26,14 +26,18 @@ def main():
         args = parser.parse_args()
         logger.info(vars(args))
 
-        num_workers = psutil.cpu_count()
+        # *IMPORTANT* need to use instances with at least 8 threads
+        # and also multiples of 8 threads
+        # see: cbm3_aws.aws.autoscale_group
+        num_workers = psutil.cpu_count() // 8
         for i in range(num_workers):
             popen_args = [
                 "cbm3_aws_instance_process",
                 "--process_index", str(i),
                 "--activity_arn", args.activity_arn,
                 "--s3_bucket_name", args.s3_bucket_name,
-                "--region_name", args.region_name
+                "--region_name", args.region_name,
+                "--max_concurrency", str(8)
             ]
             subprocess.Popen(popen_args)
 

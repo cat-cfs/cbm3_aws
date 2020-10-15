@@ -145,49 +145,24 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
                         launch_template_context.launch_template_id
                 },
                 'Overrides': [
-                    {
-                        'InstanceType': 'm5.large',
-                        'WeightedCapacity': '2'
-                    },
-                    {
-                        'InstanceType': 'm5.xlarge',
-                        'WeightedCapacity': '4'
-                    },
-                    {
-                        'InstanceType': 'm5.2xlarge',
-                        'WeightedCapacity': '8'
-                    },
-                    {
-                        'InstanceType': 'm5.4xlarge',
-                        'WeightedCapacity': '16'
-                    },
-                    {
-                        'InstanceType': 'm5.8xlarge',
-                        'WeightedCapacity': '32'
-                    },
-                    {
-                        'InstanceType': 'm4.large',
-                        'WeightedCapacity': '2'
-                    },
-                    {
-                        'InstanceType': 'm4.xlarge',
-                        'WeightedCapacity': '4'
-                    },
-                    {
-                        'InstanceType': 'm4.2xlarge',
-                        'WeightedCapacity': '8'
-                    },
-                    {
-                        'InstanceType': 'm4.4xlarge',
-                        'WeightedCapacity': '16'
-                    },
-                    {
-                        'InstanceType': 'm4.10xlarge',
-                        'WeightedCapacity': '40'
-                    }],
-                },
+                    {'InstanceType': 'm5.2xlarge',  'WeightedCapacity': '8'},
+                    {'InstanceType': 'm5.4xlarge',  'WeightedCapacity': '16'},
+                    {'InstanceType': 'm5.8xlarge',  'WeightedCapacity': '32'},
+                    {'InstanceType': 'm5a.2xlarge',  'WeightedCapacity': '8'},
+                    {'InstanceType': 'm5a.4xlarge',  'WeightedCapacity': '16'},
+                    {'InstanceType': 'm5a.8xlarge',  'WeightedCapacity': '32'},
+                    {'InstanceType': 'm4.2xlarge',  'WeightedCapacity': '8'},
+                    {'InstanceType': 'm4.4xlarge',  'WeightedCapacity': '16'},
+                    {'InstanceType': 'm4.10xlarge', 'WeightedCapacity': '40'},
+                    {'InstanceType': 'c5.2xlarge',  'WeightedCapacity': '8'},
+                    {'InstanceType': 'c5.4xlarge',  'WeightedCapacity': '16'},
+                    {'InstanceType': 'c4.2xlarge',  'WeightedCapacity': '8'},
+                    {'InstanceType': 'c4.4xlarge',  'WeightedCapacity': '16'}
+                ],
+            },
             'InstancesDistribution': {
                 # prioritized by the order of the above overrides list
+                # for on-demand only
                 'OnDemandAllocationStrategy': 'prioritized',
                 # minimum number of On demand instances
                 'OnDemandBaseCapacity': 0,

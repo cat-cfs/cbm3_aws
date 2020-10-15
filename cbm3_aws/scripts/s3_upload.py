@@ -20,8 +20,7 @@ def main():
              "execution.")
     parser.add_argument(
         "--manifest_path", required=True, type=os.path.abspath,
-        help="s3 key prefix used to make upload s3 keys specific to an "
-             "execution.")
+        help="path to a json formatted file describing local files to upload")
 
     log_helper.start_logging("s3_upload", level="INFO")
     logger = log_helper.get_logger("s3_upload")

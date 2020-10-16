@@ -149,12 +149,23 @@ def process_task(client, task_token, task_input, s3_bucket_name, logger,
 
         client.send_task_success(
             taskToken=task_token,
-            output=json.dumps({"output": task_input["simulations"]}))
+            output=json.dumps({
+                "output": {
+                    "simulations": task_input["simulations"],
+                    "errors": None
+                }
+            }))
     except Exception:
-        client.send_task_failure(
+        # need to send task_success here to avoid interrupting the entire
+        # state machine
+        client.send_task_success(
             taskToken=task_token,
-            error="Exception",
-            cause=traceback.format_exc())
+            output=json.dumps({
+                "output": {
+                    "simulations": task_input["simulations"],
+                    "errors": traceback.format_exc()
+                }
+            }))
         heart_beat_stop_flag.set()
         time.sleep(60)
     finally:

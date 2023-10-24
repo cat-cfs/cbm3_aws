@@ -1,11 +1,16 @@
 import os
-
+from logging import Logger
+from typing import Iterator
+from cbm3_aws.s3_io import S3IO
 from cbm3_python.simulation import projectsimulator
-from cbm3_aws.namespace import Namespace
 
 
 def run_tasks(
-    simulation_tasks, local_working_dir, s3_io, logger, max_concurrency
+    simulation_tasks: list[dict],
+    local_working_dir: str,
+    s3_io: S3IO,
+    logger: Logger,
+    max_concurrency: int,
 ):
     """Runs a CBM3 project simulation task
 
@@ -96,17 +101,17 @@ def run_tasks(
     )
 
     for task in tasks:
-        os.makedirs(os.path.dirname(task.results_database_path))
+        os.makedirs(os.path.dirname(task["results_database_path"]))
 
         args_list.append(
             {
-                "project_path": task.project_path,
-                "project_simulation_id": task.simulation_id,
+                "project_path": task["project_path"],
+                "project_simulation_id": task["simulation_id"],
                 "aidb_path": archive_index_path,
                 "cbm_exe_path": cbm_executables_dir,
-                "results_database_path": task.results_database_path,
-                "tempfiles_output_dir": task.tempfiles_output_dir,
-                "stdout_path": task.stdout_path,
+                "results_database_path": task["results_database_path"],
+                "tempfiles_output_dir": task["tempfiles_output_dir"],
+                "stdout_path": task["stdout_path"],
                 "copy_makelist_results": True,
                 "dist_classes_path": disturbance_classes_path,
                 "dist_rules_path": disturbance_rules_path,
@@ -129,35 +134,37 @@ def run_tasks(
     for task in tasks:
         logger.info(
             dict(
-                project_code=task.project_code,
-                simulation_id=task.simulation_id,
+                project_code=task["project_code"],
+                simulation_id=task["simulation_id"],
             )
         )
         s3_io.upload(
-            local_path=task.results_database_path,
+            local_path=task["results_database_path"],
             s3_key="results",
-            project_code=task.project_code,
-            simulation_id=task.simulation_id,
+            project_code=task["project_code"],
+            simulation_id=task["simulation_id"],
         )
         # remove the project db so it wont be uploaded in the next step
-        os.unlink(task.results_database_path)
+        os.unlink(task["results_database_path"])
         # upload all other files and dirs where the project was loaded as
         # "tempfiles" This will include the run flat files, stdout file and
         # the run log.
         s3_io.upload(
-            local_path=os.path.dirname(task.tempfiles_output_dir),
+            local_path=os.path.dirname(task["tempfiles_output_dir"]),
             s3_key="tempfiles",
-            project_code=task.project_code,
-            simulation_id=task.simulation_id,
+            project_code=task["project_code"],
+            simulation_id=task["simulation_id"],
         )
     logger.info("CBM3 tasks finished")
 
 
-def iterate_tasks(task_message, local_projects, local_results_dir):
+def iterate_tasks(
+    task_message: list[dict], local_projects: dict, local_results_dir: str
+) -> Iterator[dict]:
     for task in task_message:
         for simulation_id in task["simulation_ids"]:
             project_code = task["project_code"]
-            yield Namespace(
+            yield dict(
                 project_code=project_code,
                 project_path=local_projects[project_code],
                 simulation_id=simulation_id,

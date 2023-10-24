@@ -4,7 +4,8 @@ import time
 import tempfile
 import traceback
 import logging
-from threading import Thread, Event
+from threading import Thread
+from threading import Event
 import boto3
 import watchtower
 from ec2_metadata import ec2_metadata

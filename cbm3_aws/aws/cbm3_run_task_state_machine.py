@@ -1,11 +1,13 @@
 import json
 
 
-def get_state_machine(cbm_run_task_activity_arn):
+def get_state_machine(cbm_run_task_activity_arn: str) -> str:
     return json.dumps(
         {
-            "Comment": "Task to launch CBM runs and retry if they experience a "
-            "spot interruption",
+            "Comment": (
+                "Task to launch CBM runs and retry if they experience a crash "
+                "or spot interruption"
+            ),
             "StartAt": "RunCBMTask",
             "States": {
                 "RunCBMTask": {

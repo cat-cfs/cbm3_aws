@@ -2,7 +2,9 @@ import json
 import boto3
 
 
-def start_execution(execution_name, state_machine_arn, region_name, tasks):
+def start_execution(
+    execution_name: str, state_machine_arn: str, region_name: str, tasks: dict
+) -> dict[str, str]:
     """Starts an execution on a cbm_aws cluster
 
     Args:

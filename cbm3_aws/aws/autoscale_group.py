@@ -1,23 +1,29 @@
+from typing import Union
 import uuid
-from cbm3_aws.namespace import Namespace
+from mypy_boto3_ec2.client import EC2Client
+from mypy_boto3_autoscaling import AutoScalingClient
 
 
-def delete_launch_template(client, context):
+def delete_launch_template(client: EC2Client, context: dict[str, str]):
     """Drop launch template associated with the specified context
 
     Args:
-        client (EC2.Client): boto3 ec2 client
-        context (object): context object returned by:
+        client (EC2Client): boto3 ec2 client
+        context (dict): context returned by:
             :py:func:`create_launch_template`
     """
     client.delete_launch_template(
-        DryRun=False, LaunchTemplateId=context.launch_template_id
+        DryRun=False, LaunchTemplateId=context["launch_template_id"]
     )
 
 
 def create_launch_template(
-    client, name, image_ami_id, iam_instance_profile_arn, user_data
-):
+    client: EC2Client,
+    name: str,
+    image_ami_id: str,
+    iam_instance_profile_arn: str,
+    user_data: str,
+) -> dict[str, str]:
     """Create a launch template for provisioning instances
 
     Args:
@@ -71,25 +77,26 @@ def create_launch_template(
         ],
     )
 
-    return Namespace(
+    return dict(
         launch_template_name=response["LaunchTemplate"]["LaunchTemplateName"],
         launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"],
     )
 
 
-def get_availability_zones(client):
+def get_availability_zones(client: EC2Client) -> list:
     """Gets the all availability zones that have at least one default subnet
 
     TODO: check if there a better way to handle this?
 
     Args:
-        client (EC2.Client): boto3 ec2 client
+        client (EC2Client): boto3 ec2 client
 
     Returns:
         list: list of strings naming the matching zones for the current region
     """
     describe_availability_zones_response = client.describe_availability_zones()
     zones = describe_availability_zones_response["AvailabilityZones"]
+
     available_zones = [
         zone["ZoneName"] for zone in zones if zone["State"] == "available"
     ]
@@ -99,19 +106,21 @@ def get_availability_zones(client):
     )
     available_zones_with_subnet = []
     for subnet in describe_subnets_response["Subnets"]:
+        if "AvailabilityZone" not in subnet:
+            raise
         if subnet["AvailabilityZone"] in available_zones:
             available_zones_with_subnet.append(subnet["AvailabilityZone"])
     return available_zones_with_subnet
 
 
 def create_autoscaling_group(
-    client,
-    name,
-    launch_template_context,
-    min_size,
-    max_size,
-    availability_zones=None,
-    vpc_zone_identifier=None,
+    client: AutoScalingClient,
+    name: str,
+    launch_template_context: dict,
+    min_size: int,
+    max_size: int,
+    availability_zones: Union[list, None] = None,
+    vpc_zone_identifier: Union[str, None] = None,
 ):
     """Create an autoscaling group to manage spot instances.
 
@@ -124,10 +133,10 @@ def create_autoscaling_group(
             group.
         max_size (int): maximum number of threads to run in auto scaling
             group.
-        availability_zones (list): the list of availability zones for the
-            autoscaling group.
-        vpc_zone_identifier (str): A comma-separated list of subnet IDs
-            for your virtual private cloud (VPC).
+        availability_zones (list, Optional): the list of availability zones
+            for the autoscaling group.
+        vpc_zone_identifier (str, Optional): A comma-separated list of subnet
+            IDs for your virtual private cloud (VPC).
 
     Returns:
         object: autoscaling group context
@@ -138,7 +147,9 @@ def create_autoscaling_group(
         MixedInstancesPolicy={
             "LaunchTemplate": {
                 "LaunchTemplateSpecification": {
-                    "LaunchTemplateId": launch_template_context.launch_template_id
+                    "LaunchTemplateId": launch_template_context[
+                        "launch_template_id"
+                    ]
                 },
                 "Overrides": [
                     {"InstanceType": "m5.2xlarge", "WeightedCapacity": "8"},
@@ -180,10 +191,12 @@ def create_autoscaling_group(
 
     client.create_auto_scaling_group(**kwargs)
 
-    return Namespace(auto_scaling_group_name=name)
+    return dict(auto_scaling_group_name=name)
 
 
-def delete_autoscaling_group(client, context):
+def delete_autoscaling_group(
+    client: AutoScalingClient, context: dict[str, str]
+):
     """Delete an autoscaling group created by
         :py:func:`create_autoscaling_group`
 
@@ -193,5 +206,6 @@ def delete_autoscaling_group(client, context):
             :py:func:`create_autoscaling_group`
     """
     client.delete_auto_scaling_group(
-        AutoScalingGroupName=context.auto_scaling_group_name, ForceDelete=True
+        AutoScalingGroupName=context["auto_scaling_group_name"],
+        ForceDelete=True,
     )

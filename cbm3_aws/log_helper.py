@@ -7,11 +7,12 @@ def start_logging(name, level):
 
     logFormatter = logging.Formatter(
         "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-        datefmt="%m-%d %H:%M")
+        datefmt="%m-%d %H:%M",
+    )
 
     log_path = "{name}_{date}.log".format(
-        name=name,
-        date=datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
+        name=name, date=datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    )
     fileHandler = logging.FileHandler(log_path, "w")
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)

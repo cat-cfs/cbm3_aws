@@ -13,10 +13,12 @@ def delete_instance_profile(client, role_context):
     """
     client.remove_role_from_instance_profile(
         InstanceProfileName=role_context.instance_profile_name,
-        RoleName=role_context.role_name)
+        RoleName=role_context.role_name,
+    )
 
     client.delete_instance_profile(
-        InstanceProfileName=role_context.instance_profile_name)
+        InstanceProfileName=role_context.instance_profile_name
+    )
 
 
 def delete_role(client, role_context):
@@ -41,14 +43,13 @@ def delete_policy(client, policy_context):
             to delete.
     """
     list_entities_for_policy_response = client.list_entities_for_policy(
-        PolicyArn=policy_context.policy_arn,
-        EntityFilter="Role")
+        PolicyArn=policy_context.policy_arn, EntityFilter="Role"
+    )
     for role in list_entities_for_policy_response["PolicyRoles"]:
         client.detach_role_policy(
-            RoleName=role["RoleName"],
-            PolicyArn=policy_context.policy_arn)
-    client.delete_policy(
-        PolicyArn=policy_context.policy_arn)
+            RoleName=role["RoleName"], PolicyArn=policy_context.policy_arn
+        )
+    client.delete_policy(PolicyArn=policy_context.policy_arn)
 
 
 def create_state_machine_policy(client, account_number, names):
@@ -71,40 +72,36 @@ def create_state_machine_policy(client, account_number, names):
         "Statement": [
             {
                 "Effect": "Allow",
-                "Action": [
-                    "states:StartExecution"
-                ],
+                "Action": ["states:StartExecution"],
                 "Resource": [
                     f"arn:aws:states:*:{account_number}:stateMachine:*"
-                ]
+                ],
             },
             {
                 "Effect": "Allow",
-                "Action": [
-                    "states:DescribeExecution",
-                    "states:StopExecution"
-                ],
-                "Resource": "*"
+                "Action": ["states:DescribeExecution", "states:StopExecution"],
+                "Resource": "*",
             },
             {
                 "Effect": "Allow",
                 "Action": [
                     "events:PutTargets",
                     "events:PutRule",
-                    "events:DescribeRule"
+                    "events:DescribeRule",
                 ],
                 "Resource": [
                     f"arn:aws:events:*:{account_number}:"
                     "rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     }
     create_policy_response = client.create_policy(
         PolicyName=names.state_machine_policy,
-        Path='/',
+        Path="/",
         PolicyDocument=json.dumps(policy),
-        Description='grants access for state machine execution')
+        Description="grants access for state machine execution",
+    )
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
 
@@ -129,19 +126,15 @@ def create_ec2_worker_policy(client, s3_bucket_name, account_number, names):
             {
                 "Sid": "0",
                 "Effect": "Allow",
-                "Action": [
-                    "s3:PutObject",
-                    "s3:GetObject",
-                    "s3:DeleteObject"
-                ],
-                "Resource": f"arn:aws:s3:::{s3_bucket_name}/*"
+                "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+                "Resource": f"arn:aws:s3:::{s3_bucket_name}/*",
             },
             {
                 "Sid": "1",
                 "Effect": "Allow",
                 "Action": "states:GetActivityTask",
                 "Resource": f"arn:aws:states:*:{account_number}:activity:"
-                            f"{names.run_activity}"
+                f"{names.run_activity}",
             },
             {
                 "Sid": "2",
@@ -150,9 +143,9 @@ def create_ec2_worker_policy(client, s3_bucket_name, account_number, names):
                     "states:SendTaskSuccess",
                     "states:SendTaskFailure",
                     "states:ListActivities",
-                    "states:SendTaskHeartbeat"
+                    "states:SendTaskHeartbeat",
                 ],
-                "Resource": "*"
+                "Resource": "*",
             },
             {
                 "Sid": "3",
@@ -160,23 +153,24 @@ def create_ec2_worker_policy(client, s3_bucket_name, account_number, names):
                 "Action": [
                     "logs:CreateLogStream",
                     "logs:CreateLogGroup",
-                    "logs:PutLogEvents"
+                    "logs:PutLogEvents",
                 ],
                 "Resource": [
                     f"arn:aws:logs:*:{account_number}:log-group:cbm3_aws",
-                    f"arn:aws:logs:*:{account_number}:log-group:cbm3_aws:log-stream:*"
-                ]
-            }
-        ]
+                    f"arn:aws:logs:*:{account_number}:log-group:cbm3_aws:log-stream:*",
+                ],
+            },
+        ],
     }
 
     create_policy_response = client.create_policy(
         PolicyName=names.instance_s3_policy,
-        Path='/',
+        Path="/",
         PolicyDocument=json.dumps(policy),
-        Description='grants read/write/delete access to a particular s3 '
-                    'bucket and step function activity tasks access for '
-                    'IAM instance role')
+        Description="grants read/write/delete access to a particular s3 "
+        "bucket and step function activity tasks access for "
+        "IAM instance role",
+    )
 
     return Namespace(policy_arn=create_policy_response["Policy"]["Arn"])
 
@@ -200,29 +194,30 @@ def create_state_machine_role(client, policy_context_list, names):
         "Statement": [
             {
                 "Effect": "Allow",
-                "Principal": {
-                    "Service": "states.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
+                "Principal": {"Service": "states.amazonaws.com"},
+                "Action": "sts:AssumeRole",
             }
-        ]
+        ],
     }
 
     create_role_response = client.create_role(
-        Path='/',
+        Path="/",
         RoleName=names.state_machine_role,
         AssumeRolePolicyDocument=json.dumps(states_assume_role_policy),
-        Description='grants ec2 instances read and write permission to '
-                    'specific bucket')
+        Description="grants ec2 instances read and write permission to "
+        "specific bucket",
+    )
 
     for policy_context in policy_context_list:
         client.attach_role_policy(
             RoleName=names.state_machine_role,
-            PolicyArn=policy_context.policy_arn)
+            PolicyArn=policy_context.policy_arn,
+        )
 
     return Namespace(
         role_arn=create_role_response["Role"]["Arn"],
-        role_name=create_role_response["Role"]["RoleName"])
+        role_name=create_role_response["Role"]["RoleName"],
+    )
 
 
 def create_instance_iam_role(client, policy_context_list, names):
@@ -244,40 +239,46 @@ def create_instance_iam_role(client, policy_context_list, names):
         "Statement": [
             {
                 "Effect": "Allow",
-                "Principal": {
-                    "Service": "ec2.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
+                "Principal": {"Service": "ec2.amazonaws.com"},
+                "Action": "sts:AssumeRole",
             }
-        ]
+        ],
     }
 
     create_role_response = client.create_role(
-        Path='/',
+        Path="/",
         RoleName=names.instance_iam_role,
         AssumeRolePolicyDocument=json.dumps(ec2_assume_role_policy),
-        Description='grants ec2 instances read and write permission to '
-                    'specific bucket, state machine access, and autoscale '
-                    'group access')
+        Description="grants ec2 instances read and write permission to "
+        "specific bucket, state machine access, and autoscale "
+        "group access",
+    )
 
     for policy_context in policy_context_list:
         client.attach_role_policy(
             RoleName=names.instance_iam_role,
-            PolicyArn=policy_context.policy_arn)
+            PolicyArn=policy_context.policy_arn,
+        )
 
     create_instance_profile_response = client.create_instance_profile(
-        InstanceProfileName=names.instance_iam_role)
+        InstanceProfileName=names.instance_iam_role
+    )
 
     client.add_role_to_instance_profile(
         InstanceProfileName=names.instance_iam_role,
-        RoleName=names.instance_iam_role)
+        RoleName=names.instance_iam_role,
+    )
 
     return Namespace(
         role_arn=create_role_response["Role"]["Arn"],
         role_name=create_role_response["Role"]["RoleName"],
         instance_profile_name=create_instance_profile_response[
-            "InstanceProfile"]["InstanceProfileName"],
+            "InstanceProfile"
+        ]["InstanceProfileName"],
         instance_profile_id=create_instance_profile_response[
-            "InstanceProfile"]["InstanceProfileId"],
+            "InstanceProfile"
+        ]["InstanceProfileId"],
         instance_profile_arn=create_instance_profile_response[
-            "InstanceProfile"]["Arn"])
+            "InstanceProfile"
+        ]["Arn"],
+    )

@@ -1,4 +1,3 @@
-
 def create_bucket(client, bucket_name, region):
     """Create an S3 bucket in a specified region
 
@@ -9,7 +8,7 @@ def create_bucket(client, bucket_name, region):
         bucket_name (str): Bucket to create
         region (str): String region to create bucket in, e.g., 'us-west-2'.
     """
-    location = {'LocationConstraint': region}
+    location = {"LocationConstraint": region}
     client.create_bucket(
-        Bucket=bucket_name,
-        CreateBucketConfiguration=location)
+        Bucket=bucket_name, CreateBucketConfiguration=location
+    )

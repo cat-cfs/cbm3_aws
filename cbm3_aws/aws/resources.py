@@ -17,7 +17,7 @@ from cbm3_aws import log_helper
 logger = log_helper.get_logger(__name__)
 
 
-def __s3_bucket_exists(s3_client, bucket_name):
+def _s3_bucket_exists(s3_client, bucket_name):
     try:
         s3_client.head_bucket(Bucket=bucket_name)
     except ClientError:
@@ -30,7 +30,7 @@ def __get_account_number(sts_client):
 
 
 def __write_resources_file(resource_description, resource_description_path):
-    with open(resource_description_path, 'w') as out_file:
+    with open(resource_description_path, "w") as out_file:
         json.dump(resource_description.to_dict(), out_file, indent=4)
 
 
@@ -47,51 +47,65 @@ def cleanup(resource_description):
 
     logger.info("connecting")
     ec2_client = boto3.client("ec2", region_name=rd.region_name)
-    auto_scale_client = boto3.client(
-        'autoscaling', region_name=rd.region_name)
+
+    auto_scale_client = boto3.client("autoscaling", region_name=rd.region_name)
     iam_client = boto3.client("iam", region_name=rd.region_name)
-    sfn_client = boto3.client('stepfunctions', region_name=rd.region_name)
+    sfn_client = boto3.client("stepfunctions", region_name=rd.region_name)
 
     if "autoscale_group_context" in rd:
         logger.info("drop autoscale group")
         autoscale_group.delete_autoscaling_group(
-            client=auto_scale_client, context=rd.autoscale_group_context)
+            client=auto_scale_client, context=rd.autoscale_group_context
+        )
     if "launch_template_context" in rd:
         logger.info("drop launch template")
         autoscale_group.delete_launch_template(
-            client=ec2_client, context=rd.launch_template_context)
+            client=ec2_client, context=rd.launch_template_context
+        )
     if "state_machine_context" in rd:
         logger.info("drop state machine")
         step_functions.cleanup(
-            client=sfn_client, arn_context=rd.state_machine_context)
+            client=sfn_client, arn_context=rd.state_machine_context
+        )
 
     logger.info("drop policies")
     if "state_machine_policy_context" in rd:
         roles.delete_policy(
-            client=iam_client,
-            policy_context=rd.state_machine_policy_context)
+            client=iam_client, policy_context=rd.state_machine_policy_context
+        )
     if "ec2_worker_policy" in rd:
         roles.delete_policy(
-            client=iam_client, policy_context=rd.ec2_worker_policy)
+            client=iam_client, policy_context=rd.ec2_worker_policy
+        )
 
     logger.info("drop roles")
     if "state_machine_role_context" in rd:
         roles.delete_role(
-            client=iam_client, role_context=rd.state_machine_role_context)
+            client=iam_client, role_context=rd.state_machine_role_context
+        )
     if "instance_iam_role_context" in rd:
         roles.delete_instance_profile(
-            client=iam_client, role_context=rd.instance_iam_role_context)
+            client=iam_client, role_context=rd.instance_iam_role_context
+        )
         roles.delete_role(
-            client=iam_client, role_context=rd.instance_iam_role_context)
+            client=iam_client, role_context=rd.instance_iam_role_context
+        )
 
 
-def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
-           image_ami_id, resource_description_path, vpc_zone_identifier=None):
-
+def deploy(
+    region_name,
+    s3_bucket_name,
+    min_virtual_cpu,
+    max_virtual_cpu,
+    image_ami_id,
+    resource_description_path,
+    vpc_zone_identifier=None,
+):
     if os.path.exists(resource_description_path):
         raise ValueError(
             "specified resource_description_path already exists: "
-            f"'{resource_description_path}'")
+            f"'{resource_description_path}'"
+        )
 
     # resource description
     rd = Namespace()
@@ -109,97 +123,120 @@ def deploy(region_name, s3_bucket_name, min_virtual_cpu, max_virtual_cpu,
         s3_client = boto3.client("s3", region_name=rd.region_name)
         ec2_client = boto3.client("ec2", region_name=rd.region_name)
         auto_scale_client = boto3.client(
-            'autoscaling', region_name=rd.region_name)
+            "autoscaling", region_name=rd.region_name
+        )
         iam_client = boto3.client("iam", region_name=rd.region_name)
         sts_client = boto3.client("sts", region_name=rd.region_name)
-        sfn_client = boto3.client('stepfunctions', region_name=rd.region_name)
+        sfn_client = boto3.client("stepfunctions", region_name=rd.region_name)
 
         logger.info("check if bucket exists")
-        if not __s3_bucket_exists(s3_client, rd.s3_bucket_name):
+        if not _s3_bucket_exists(s3_client, rd.s3_bucket_name):
             logger.info(f"creating s3 bucket {rd.s3_bucket_name}")
             s3_bucket.create_bucket(
-                client=s3_client, bucket_name=rd.s3_bucket_name,
-                region=rd.region_name)
+                client=s3_client,
+                bucket_name=rd.s3_bucket_name,
+                region=rd.region_name,
+            )
 
         account_number = __get_account_number(sts_client)
         logger.info("creating policies")
         rd.ec2_worker_policy = roles.create_ec2_worker_policy(
-            client=iam_client, s3_bucket_name=rd.s3_bucket_name,
-            account_number=account_number, names=rd.names)
+            client=iam_client,
+            s3_bucket_name=rd.s3_bucket_name,
+            account_number=account_number,
+            names=rd.names,
+        )
         rd.state_machine_policy_context = roles.create_state_machine_policy(
-            client=iam_client, account_number=account_number, names=rd.names)
+            client=iam_client, account_number=account_number, names=rd.names
+        )
 
         logger.info("creating iam roles")
         rd.instance_iam_role_context = roles.create_instance_iam_role(
             client=iam_client,
-            policy_context_list=[
-                rd.ec2_worker_policy],
-            names=rd.names)
+            policy_context_list=[rd.ec2_worker_policy],
+            names=rd.names,
+        )
 
         logger.info("creating state machine role")
         rd.state_machine_role_context = roles.create_state_machine_role(
             client=iam_client,
             policy_context_list=[rd.state_machine_policy_context],
-            names=rd.names)
+            names=rd.names,
+        )
 
         # https://github.com/hashicorp/terraform/issues/15341
         # need to add a delay for the iam changes above to be processed
         # internally by AWS
         wait_time = 20
         logger.info(
-            f"waiting {wait_time} seconds for changes to take effect on AWS")
+            f"waiting {wait_time} seconds for changes to take effect on AWS"
+        )
         time.sleep(wait_time)
 
         logger.info("creating state machine")
         rd.state_machine_context = step_functions.create_state_machines(
-            client=sfn_client, role_arn=rd.state_machine_role_context.role_arn,
-            names=rd.names)
+            client=sfn_client,
+            role_arn=rd.state_machine_role_context.role_arn,
+            names=rd.names,
+        )
 
         logger.info("creating userdata")
         rd.user_data = create_userdata(
             s3_bucket_name=rd.s3_bucket_name,
             activity_arn=rd.state_machine_context.activity_arn,
-            region_name=rd.region_name)
+            region_name=rd.region_name,
+        )
 
-        iam_instance_profile_arn = \
+        iam_instance_profile_arn = (
             rd.instance_iam_role_context.instance_profile_arn
+        )
 
         logger.info("creating launch template")
         rd.launch_template_context = autoscale_group.create_launch_template(
-            client=ec2_client, name=rd.names.autoscale_launch_template,
+            client=ec2_client,
+            name=rd.names.autoscale_launch_template,
             image_ami_id=rd.image_ami_id,
             iam_instance_profile_arn=iam_instance_profile_arn,
-            user_data=rd.user_data)
+            user_data=rd.user_data,
+        )
 
         availability_zones = None
         if not vpc_zone_identifier:
             logger.info("getting availability zones")
             availability_zones = autoscale_group.get_availability_zones(
-                client=ec2_client)
+                client=ec2_client
+            )
         logger.info(f"using zones: {availability_zones}")
         logger.info(f"create autoscaling group")
         rd.autoscale_group_context = autoscale_group.create_autoscaling_group(
-            client=auto_scale_client, name=rd.names.autoscale_group,
+            client=auto_scale_client,
+            name=rd.names.autoscale_group,
             launch_template_context=rd.launch_template_context,
-            min_size=rd.min_virtual_cpu, max_size=rd.max_virtual_cpu,
+            min_size=rd.min_virtual_cpu,
+            max_size=rd.max_virtual_cpu,
             availability_zones=availability_zones,
-            vpc_zone_identifier=vpc_zone_identifier)
+            vpc_zone_identifier=vpc_zone_identifier,
+        )
 
         return rd
 
     except ClientError as err:
         # from:
         # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html
-        if err.response['Error']['Code'] == 'InternalError':  # Generic error
+        if err.response["Error"]["Code"] == "InternalError":  # Generic error
             logger.error(
-                'Error Message: {}'.format(
-                    err.response['Error']['Message']))
+                "Error Message: {}".format(err.response["Error"]["Message"])
+            )
             logger.error(
-                'Request ID: {}'.format(
-                    err.response['ResponseMetadata']['RequestId']))
+                "Request ID: {}".format(
+                    err.response["ResponseMetadata"]["RequestId"]
+                )
+            )
             logger.error(
-                'Http code: {}'.format(
-                    err.response['ResponseMetadata']['HTTPStatusCode']))
+                "Http code: {}".format(
+                    err.response["ResponseMetadata"]["HTTPStatusCode"]
+                )
+            )
         else:
             raise err
     finally:

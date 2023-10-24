@@ -3,7 +3,6 @@ from types import SimpleNamespace
 
 # https://dev.to/taqkarim/extending-simplenamespace-for-nested-dictionaries-58e8
 class Namespace(SimpleNamespace):
-
     @staticmethod
     def map_entry(entry):
         if isinstance(entry, dict):
@@ -21,12 +20,12 @@ class Namespace(SimpleNamespace):
     def to_dict(self):
         def unpack(item):
             if isinstance(item, Namespace):
-                return {
-                    k: unpack(v) for k, v in item.__dict__.items()}
+                return {k: unpack(v) for k, v in item.__dict__.items()}
             elif type(item) == list:
                 return [unpack(value) for value in item]
             else:
                 return item
+
         output = {}
         for k, v in self.__dict__.items():
             output[k] = unpack(v)

@@ -11,12 +11,13 @@ def delete_launch_template(client, context):
             :py:func:`create_launch_template`
     """
     client.delete_launch_template(
-        DryRun=False,
-        LaunchTemplateId=context.launch_template_id)
+        DryRun=False, LaunchTemplateId=context.launch_template_id
+    )
 
 
-def create_launch_template(client, name, image_ami_id,
-                           iam_instance_profile_arn, user_data):
+def create_launch_template(
+    client, name, image_ami_id, iam_instance_profile_arn, user_data
+):
     """Create a launch template for provisioning instances
 
     Args:
@@ -37,53 +38,43 @@ def create_launch_template(client, name, image_ami_id,
         ClientToken=client_token,
         LaunchTemplateName=name,
         LaunchTemplateData={
-            'EbsOptimized': False,
-            'IamInstanceProfile': {
-                'Arn': iam_instance_profile_arn,
+            "EbsOptimized": False,
+            "IamInstanceProfile": {
+                "Arn": iam_instance_profile_arn,
             },
-            'ImageId': image_ami_id,
-            'Monitoring': {
-                'Enabled': True
-            },
-            'InstanceInitiatedShutdownBehavior': 'terminate',
-            'UserData': user_data,
-            'TagSpecifications': [
+            "ImageId": image_ami_id,
+            "Monitoring": {"Enabled": True},
+            "InstanceInitiatedShutdownBehavior": "terminate",
+            "UserData": user_data,
+            "TagSpecifications": [
                 {
-                    'ResourceType': 'instance',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': 'CBM3 Worker Instance'
-                        },
-                    ]
+                    "ResourceType": "instance",
+                    "Tags": [
+                        {"Key": "Name", "Value": "CBM3 Worker Instance"},
+                    ],
                 },
                 {
-                    'ResourceType': 'volume',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': 'CBM3 Worker volume'
-                        },
-                    ]
+                    "ResourceType": "volume",
+                    "Tags": [
+                        {"Key": "Name", "Value": "CBM3 Worker volume"},
+                    ],
                 },
-            ]
+            ],
         },
         TagSpecifications=[
             {
-                'ResourceType': 'launch-template',
-                'Tags': [
-                    {
-                        'Key': 'name',
-                        'Value': 'CBM3 launch template'
-                    },
-                ]
+                "ResourceType": "launch-template",
+                "Tags": [
+                    {"Key": "name", "Value": "CBM3 launch template"},
+                ],
             },
-        ]
+        ],
     )
 
     return Namespace(
         launch_template_name=response["LaunchTemplate"]["LaunchTemplateName"],
-        launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"])
+        launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"],
+    )
 
 
 def get_availability_zones(client):
@@ -100,12 +91,12 @@ def get_availability_zones(client):
     describe_availability_zones_response = client.describe_availability_zones()
     zones = describe_availability_zones_response["AvailabilityZones"]
     available_zones = [
-        zone["ZoneName"] for zone in zones if zone["State"] == "available"]
+        zone["ZoneName"] for zone in zones if zone["State"] == "available"
+    ]
 
     describe_subnets_response = client.describe_subnets(
-        Filters=[
-            {'Name': 'default-for-az',
-             'Values': ['true']}])
+        Filters=[{"Name": "default-for-az", "Values": ["true"]}]
+    )
     available_zones_with_subnet = []
     for subnet in describe_subnets_response["Subnets"]:
         if subnet["AvailabilityZone"] in available_zones:
@@ -113,9 +104,15 @@ def get_availability_zones(client):
     return available_zones_with_subnet
 
 
-def create_autoscaling_group(client, name, launch_template_context, min_size,
-                             max_size, availability_zones=None,
-                             vpc_zone_identifier=None):
+def create_autoscaling_group(
+    client,
+    name,
+    launch_template_context,
+    min_size,
+    max_size,
+    availability_zones=None,
+    vpc_zone_identifier=None,
+):
     """Create an autoscaling group to manage spot instances.
 
     Args:
@@ -139,42 +136,42 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
     kwargs = dict(
         AutoScalingGroupName=name,
         MixedInstancesPolicy={
-            'LaunchTemplate': {
-                'LaunchTemplateSpecification': {
-                    'LaunchTemplateId':
-                        launch_template_context.launch_template_id
+            "LaunchTemplate": {
+                "LaunchTemplateSpecification": {
+                    "LaunchTemplateId": launch_template_context.launch_template_id
                 },
-                'Overrides': [
-                    {'InstanceType': 'm5.2xlarge',  'WeightedCapacity': '8'},
-                    {'InstanceType': 'm5.4xlarge',  'WeightedCapacity': '16'},
-                    {'InstanceType': 'm5.8xlarge',  'WeightedCapacity': '32'},
-                    {'InstanceType': 'm5a.2xlarge',  'WeightedCapacity': '8'},
-                    {'InstanceType': 'm5a.4xlarge',  'WeightedCapacity': '16'},
-                    {'InstanceType': 'm5a.8xlarge',  'WeightedCapacity': '32'},
-                    {'InstanceType': 'm4.2xlarge',  'WeightedCapacity': '8'},
-                    {'InstanceType': 'm4.4xlarge',  'WeightedCapacity': '16'},
-                    {'InstanceType': 'm4.10xlarge', 'WeightedCapacity': '40'},
-                    {'InstanceType': 'c5.2xlarge',  'WeightedCapacity': '8'},
-                    {'InstanceType': 'c5.4xlarge',  'WeightedCapacity': '16'},
-                    {'InstanceType': 'c4.2xlarge',  'WeightedCapacity': '8'},
-                    {'InstanceType': 'c4.4xlarge',  'WeightedCapacity': '16'}
+                "Overrides": [
+                    {"InstanceType": "m5.2xlarge", "WeightedCapacity": "8"},
+                    {"InstanceType": "m5.4xlarge", "WeightedCapacity": "16"},
+                    {"InstanceType": "m5.8xlarge", "WeightedCapacity": "32"},
+                    {"InstanceType": "m5a.2xlarge", "WeightedCapacity": "8"},
+                    {"InstanceType": "m5a.4xlarge", "WeightedCapacity": "16"},
+                    {"InstanceType": "m5a.8xlarge", "WeightedCapacity": "32"},
+                    {"InstanceType": "m4.2xlarge", "WeightedCapacity": "8"},
+                    {"InstanceType": "m4.4xlarge", "WeightedCapacity": "16"},
+                    {"InstanceType": "m4.10xlarge", "WeightedCapacity": "40"},
+                    {"InstanceType": "c5.2xlarge", "WeightedCapacity": "8"},
+                    {"InstanceType": "c5.4xlarge", "WeightedCapacity": "16"},
+                    {"InstanceType": "c4.2xlarge", "WeightedCapacity": "8"},
+                    {"InstanceType": "c4.4xlarge", "WeightedCapacity": "16"},
                 ],
             },
-            'InstancesDistribution': {
+            "InstancesDistribution": {
                 # prioritized by the order of the above overrides list
                 # for on-demand only
-                'OnDemandAllocationStrategy': 'prioritized',
+                "OnDemandAllocationStrategy": "prioritized",
                 # minimum number of On demand instances
-                'OnDemandBaseCapacity': 0,
+                "OnDemandBaseCapacity": 0,
                 # percent of on demand versus spot instances
-                'OnDemandPercentageAboveBaseCapacity': 0,
-                'SpotAllocationStrategy': 'capacity-optimized',
-            }
+                "OnDemandPercentageAboveBaseCapacity": 0,
+                "SpotAllocationStrategy": "capacity-optimized",
+            },
         },
         MinSize=min_size,
         MaxSize=max_size,
         TerminationPolicies=["NewestInstance"],
-        NewInstancesProtectedFromScaleIn=False)
+        NewInstancesProtectedFromScaleIn=False,
+    )
 
     if availability_zones:
         kwargs["AvailabilityZones"] = availability_zones
@@ -183,8 +180,7 @@ def create_autoscaling_group(client, name, launch_template_context, min_size,
 
     client.create_auto_scaling_group(**kwargs)
 
-    return Namespace(
-        auto_scaling_group_name=name)
+    return Namespace(auto_scaling_group_name=name)
 
 
 def delete_autoscaling_group(client, context):
@@ -197,5 +193,5 @@ def delete_autoscaling_group(client, context):
             :py:func:`create_autoscaling_group`
     """
     client.delete_auto_scaling_group(
-        AutoScalingGroupName=context.auto_scaling_group_name,
-        ForceDelete=True)
+        AutoScalingGroupName=context.auto_scaling_group_name, ForceDelete=True
+    )

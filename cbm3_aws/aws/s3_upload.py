@@ -38,9 +38,11 @@ def upload(s3_bucket_name, execution_s3_key_prefix, manifest):
         s3_io = S3IO(
             execution_s3_key_prefix=execution_s3_key_prefix,
             s3_interface=S3Interface(
-                s3_resource=boto3.resource('s3'),
+                s3_resource=boto3.resource("s3"),
                 bucket_name=s3_bucket_name,
-                local_temp_dir=temp_dir))
+                local_temp_dir=temp_dir,
+            ),
+        )
 
         for item in manifest:
             logger.info(f"uploading {item}")

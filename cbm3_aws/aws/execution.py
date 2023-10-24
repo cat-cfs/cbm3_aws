@@ -19,10 +19,11 @@ def start_execution(execution_name, state_machine_arn, region_name, tasks):
         dict: the return value of the boto3 state function client
             start_execution function.
     """
-    sfn_client = boto3.client('stepfunctions', region_name=region_name)
+    sfn_client = boto3.client("stepfunctions", region_name=region_name)
 
     start_execution_response = sfn_client.start_execution(
         stateMachineArn=state_machine_arn,
         name=execution_name,
-        input=json.dumps(tasks))
+        input=json.dumps(tasks),
+    )
     return {str(k): str(v) for k, v in start_execution_response.items()}

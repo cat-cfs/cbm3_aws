@@ -9,18 +9,19 @@ def create_userdata(activity_arn, s3_bucket_name, region_name):
         str: lines of commands to run in AWS EC2 user-data at EC2 startup
     """
 
-    instance_run_script_command = \
-        "cbm3_aws_instance " \
-        f"--activity_arn {activity_arn} " \
-        f"--s3_bucket_name {s3_bucket_name} " \
+    instance_run_script_command = (
+        "cbm3_aws_instance "
+        f"--activity_arn {activity_arn} "
+        f"--s3_bucket_name {s3_bucket_name} "
         f"--region_name {region_name}"
+    )
 
     commands = [
         "<powershell>",
         "pip install git+https://github.com/cat-cfs/cbm3_python",
         "pip install git+https://github.com/smorken/cbm3_aws",
         instance_run_script_command,
-        "</powershell>"
+        "</powershell>",
     ]
     userdata = "\n".join(commands)
     return base64.b64encode(userdata.encode()).decode("ascii")

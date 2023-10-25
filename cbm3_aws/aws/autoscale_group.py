@@ -77,9 +77,20 @@ def create_launch_template(
         ],
     )
 
+    launch_template = response["LaunchTemplate"]
+    if (
+        "LaunchTemplateName" not in launch_template
+        or "LaunchTemplateId" not in launch_template
+    ):
+        raise ValueError(
+            "error in create_launch_template response: missing name and id"
+        )
+    launch_template_name = launch_template["LaunchTemplateName"]
+    launch_template_id = launch_template["LaunchTemplateId"]
+
     return dict(
-        launch_template_name=response["LaunchTemplate"]["LaunchTemplateName"],
-        launch_template_id=response["LaunchTemplate"]["LaunchTemplateId"],
+        launch_template_name=launch_template_name,
+        launch_template_id=launch_template_id,
     )
 
 
@@ -97,9 +108,15 @@ def get_availability_zones(client: EC2Client) -> list:
     describe_availability_zones_response = client.describe_availability_zones()
     zones = describe_availability_zones_response["AvailabilityZones"]
 
-    available_zones = [
-        zone["ZoneName"] for zone in zones if zone["State"] == "available"
-    ]
+    available_zones = []
+    for zone in zones:
+        if "ZoneName" not in zone or "State" not in zone:
+            raise ValueError(
+                "error in describe_availability_zones response. "
+                "Expected 'ZoneName' and 'State'."
+            )
+        if zone["State"] == "available":
+            available_zones.append(zone["ZoneName"])
 
     describe_subnets_response = client.describe_subnets(
         Filters=[{"Name": "default-for-az", "Values": ["true"]}]
@@ -107,7 +124,7 @@ def get_availability_zones(client: EC2Client) -> list:
     available_zones_with_subnet = []
     for subnet in describe_subnets_response["Subnets"]:
         if "AvailabilityZone" not in subnet:
-            raise
+            raise ValueError("AvailabilityZone not present in response")
         if subnet["AvailabilityZone"] in available_zones:
             available_zones_with_subnet.append(subnet["AvailabilityZone"])
     return available_zones_with_subnet

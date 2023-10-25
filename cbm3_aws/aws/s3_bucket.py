@@ -5,7 +5,7 @@ from mypy_boto3_s3.literals import BucketLocationConstraintType
 
 def create_bucket(
     client: S3Client, bucket_name: str, region: BucketLocationConstraintType
-):
+) -> None:
     """Create an S3 bucket in a specified region
 
     If a region is not specified, the bucket is created in the S3 default

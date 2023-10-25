@@ -9,7 +9,7 @@ logger = log_helper.get_logger(__name__)
 
 def upload(
     s3_bucket_name: str, execution_s3_key_prefix: str, manifest: list[dict]
-):
+) -> None:
     """uploads items in the specified manifest to the specified s3 bucket
     using the execution_s3_key_prefix to produce an S3 key specific to an
     execution name.

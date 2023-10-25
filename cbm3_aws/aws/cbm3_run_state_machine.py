@@ -16,7 +16,7 @@ def get_state_machine(task_state_machine_arn: str) -> str:
                         "States": {
                             "launch_cbm_task": {
                                 "Type": "Task",
-                                "Resource": "arn:aws:states:::states:startExecution.sync",
+                                "Resource": "arn:aws:states:::states:startExecution.sync",  # noqa E501
                                 "Parameters": {
                                     "StateMachineArn": task_state_machine_arn,
                                     "Input": {

@@ -3,7 +3,6 @@ import json
 
 from argparse import ArgumentParser
 from cbm3_aws import log_helper
-from cbm3_aws.namespace import Namespace
 from cbm3_aws.aws import execution
 
 
@@ -59,14 +58,16 @@ def main():
 
         with open(args.response_output_path, "w") as out_file:
             with open(args.resource_description_path, "r") as resources_fp:
-                rd = Namespace(**json.load(resources_fp))
+                rd = json.load(resources_fp)
             with open(args.tasks_file_path, "r") as tasks_fp:
                 tasks = json.load(tasks_fp)
-            state_machine_arn = rd.state_machine_context.app_state_machine_arn
+            state_machine_arn = rd["state_machine_context"][
+                "app_state_machine_arn"
+            ]
             start_execution_response = execution.start_execution(
                 execution_name=args.execution_name,
                 state_machine_arn=state_machine_arn,
-                region_name=rd.region_name,
+                region_name=rd["region_name"],
                 tasks=tasks,
             )
             logger.info(json.dumps(start_execution_response, indent=4))

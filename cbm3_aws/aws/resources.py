@@ -11,6 +11,8 @@ from cbm3_aws.aws import step_functions
 from cbm3_aws.aws import autoscale_group
 from cbm3_aws.aws import s3_bucket
 from mypy_boto3_s3.literals import BucketLocationConstraintType
+from mypy_boto3_sts.client import STSClient
+from mypy_boto3_s3.client import S3Client
 from cbm3_aws.aws.names import get_names
 from cbm3_aws.aws.names import get_uuid
 from cbm3_aws import log_helper
@@ -18,7 +20,7 @@ from cbm3_aws import log_helper
 logger = log_helper.get_logger(__name__)
 
 
-def _s3_bucket_exists(s3_client, bucket_name):
+def _s3_bucket_exists(s3_client: S3Client, bucket_name: str) -> bool:
     try:
         s3_client.head_bucket(Bucket=bucket_name)
     except ClientError:
@@ -26,18 +28,18 @@ def _s3_bucket_exists(s3_client, bucket_name):
     return True
 
 
-def _get_account_number(sts_client):
+def _get_account_number(sts_client: STSClient) -> str:
     return sts_client.get_caller_identity()["Account"]
 
 
 def _write_resources_file(
     resource_description: dict, resource_description_path: str
-):
+) -> None:
     with open(resource_description_path, "w") as out_file:
         json.dump(resource_description, out_file, indent=4)
 
 
-def cleanup(resource_description: dict):
+def cleanup(resource_description: dict) -> None:
     """Cleans up all resources allocated by the :py:func:`deploy` method.
 
     Args:
@@ -106,7 +108,7 @@ def deploy(
     image_ami_id: str,
     resource_description_path: str,
     vpc_zone_identifier: Union[str, None] = None,
-):
+) -> dict:
     if os.path.exists(resource_description_path):
         raise ValueError(
             "specified resource_description_path already exists: "
@@ -262,3 +264,4 @@ def deploy(
             raise err
     finally:
         _write_resources_file(rd, resource_description_path)
+    return {}

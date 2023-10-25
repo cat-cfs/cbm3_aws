@@ -4,7 +4,6 @@ import json
 from argparse import ArgumentParser
 from cbm3_aws import log_helper
 from cbm3_aws.aws import resources
-from cbm3_aws.namespace import Namespace
 
 
 def main():
@@ -29,7 +28,7 @@ def main():
 
         path = os.path.abspath(args.resource_description_path)
         with open(path, "r") as fp:
-            data = Namespace(**json.load(fp))
+            data = json.load(fp)
         resources.cleanup(resource_description=data)
     except Exception:
         logger.exception("")

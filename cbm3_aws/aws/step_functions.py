@@ -3,7 +3,7 @@ from cbm3_aws.aws import cbm3_run_state_machine
 from mypy_boto3_stepfunctions.client import SFNClient
 
 
-def _create_worker_activity(client: SFNClient, names: dict[str, str]):
+def _create_worker_activity(client: SFNClient, names: dict[str, str]) -> str:
     response = client.create_activity(name=names["run_activity"])
     return response["activityArn"]
 
@@ -13,7 +13,7 @@ def _create_task_state_machine(
     worker_activity_resource_arn: str,
     role_arn: str,
     names: dict[str, str],
-):
+) -> str:
     state_machine_definition = cbm3_run_task_state_machine.get_state_machine(
         cbm_run_task_activity_arn=worker_activity_resource_arn
     )
@@ -33,7 +33,7 @@ def _create_application_state_machine(
     task_state_machine_arn: str,
     role_arn: str,
     names: dict[str, str],
-):
+) -> str:
     state_machine_definition = cbm3_run_state_machine.get_state_machine(
         task_state_machine_arn=task_state_machine_arn
     )
@@ -50,7 +50,7 @@ def _create_application_state_machine(
 
 def create_state_machines(
     client: SFNClient, role_arn: str, names: dict[str, str]
-):
+) -> dict:
     """Create the state machine for running tasks on instances
 
     Args:
@@ -81,7 +81,7 @@ def create_state_machines(
     return ctx
 
 
-def cleanup(client: SFNClient, arn_context: dict[str, str]):
+def cleanup(client: SFNClient, arn_context: dict[str, str]) -> None:
     if "activity_arn" in arn_context:
         client.delete_activity(activityArn=arn_context["activity_arn"])
     if "task_state_machine_arn" in arn_context:

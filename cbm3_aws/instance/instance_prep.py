@@ -3,15 +3,16 @@ import json
 import base64
 from urllib import request
 from io import BytesIO
+from cbm3_aws.s3_interface import S3Interface
 
 
-def _download_file(url, local_file_path):
+def _download_file(url: str, local_file_path: str) -> None:
     response = request.urlopen(url)
     with open(local_file_path, "wb") as local_file:
         local_file.write(BytesIO(response.read()).read())
 
 
-def _upload_to_s3(s3_interface, local_software_dir):
+def _upload_to_s3(s3_interface: S3Interface, local_software_dir: str) -> None:
     s3_interface.upload_compressed(
         key_name_prefix="cbm3_aws/instance_prep",
         document_name="instance_software",
@@ -19,7 +20,7 @@ def _upload_to_s3(s3_interface, local_software_dir):
     )
 
 
-def _load_software_list():
+def _load_software_list() -> list:
     software_list_path = os.path.join(
         get_local_dir(), "instance_prep_software.json"
     )
@@ -27,13 +28,15 @@ def _load_software_list():
         return json.load(software_list_file)["software_list"]
 
 
-def upload_software(s3_interface, local_software_dir):
+def upload_software(
+    s3_interface: S3Interface, local_software_dir: str
+) -> None:
     """downloads software for instance installation using the links
     in the packaged ./instance_prep_software.json file and upload them
     to s3 using the specified s3_interface object.
 
     Args:
-        s3_interface (cbm3_aws.s3_interface.S3Interface): object for uploading
+        s3_interface (S3Interface): object for uploading
             the software to s3
         local_software_dir (str): directory to store the downloaded software
     """
@@ -48,7 +51,7 @@ def upload_software(s3_interface, local_software_dir):
     _upload_to_s3(s3_interface, local_software_dir)
 
 
-def get_local_dir():
+def get_local_dir() -> str:
     """Gets the directory containing this script
     Returns:
         str: full path to the the script's directory

@@ -48,6 +48,8 @@ def delete_policy(client: IAMClient, policy_context: dict[str, str]):
         PolicyArn=policy_context["policy_arn"], EntityFilter="Role"
     )
     for role in list_entities_for_policy_response["PolicyRoles"]:
+        if "RoleName" not in role:
+            raise ValueError("RoleName not in role response")
         client.detach_role_policy(
             RoleName=role["RoleName"], PolicyArn=policy_context["policy_arn"]
         )
@@ -107,6 +109,8 @@ def create_state_machine_policy(
         PolicyDocument=json.dumps(policy),
         Description="grants access for state machine execution",
     )
+    if "Arn" not in create_policy_response["Policy"]:
+        raise ValueError("Arn not found in create_policy_response")
     return dict(policy_arn=create_policy_response["Policy"]["Arn"])
 
 

@@ -2,13 +2,13 @@
     "software_list": [
         {
             "name": "python",
-            "url": "https://www.python.org/ftp/python/3.8.6/python-3.8.6-amd64.exe",
-            "file_name": "python-3.8.6-amd64.exe"
+            "url": "https://www.python.org/ftp/python/3.11.6/python-3.11.6-amd64.exe",
+            "file_name": "python-3.11.6-amd64.exe"
         },
         {
             "name": "git",
-            "url": "https://github.com/git-for-windows/git/releases/download/v2.28.0.windows.1/Git-2.28.0-64-bit.exe",
-            "file_name": "Git-2.28.0-64-bit.exe"
+            "url": "https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-64-bit.exe",
+            "file_name": "Git-2.42.0.2-64-bit.exe"
         },
         {
             "name": "MS Access driver",

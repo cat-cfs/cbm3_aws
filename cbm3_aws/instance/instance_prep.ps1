@@ -7,14 +7,14 @@ Expand-Archive -LiteralPath ~\instance_software.zip -DestinationPath ~\software
 DISM /Online /Enable-Feature:NetFx3 /All
 
 #install python to c:\python38
-Start-Process -FilePath ~\software\python-3.8.6-amd64.exe -ArgumentList "/quiet TargetDir=c:\python38 InstallAllUsers=1 PrependPath=1 Include_test=0" -NoNewWindow -Wait
+Start-Process -FilePath ~\software\python-3.11.6-amd64.exe -ArgumentList "/quiet TargetDir=c:\python311 InstallAllUsers=1 PrependPath=1 Include_test=0" -NoNewWindow -Wait
 #set python paths for the process
-[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python38")
-[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python38\scripts")
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python311")
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python311\scripts")
 #helps with installing other package wheels
 pip install wheel
 
-Start-Process -FilePath ~\software\Git-2.28.0-64-bit -ArgumentList "/SILENT /DIR='c:\git'" -NoNewWindow -Wait
+Start-Process -FilePath ~\software\Git-2.42.0.2-64-bit.exe -ArgumentList "/SILENT /DIR='c:\git'" -NoNewWindow -Wait
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;c:\git\cmd")
 
 #install access database engine

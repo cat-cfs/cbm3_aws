@@ -1,7 +1,9 @@
 import base64
 
 
-def create_userdata(activity_arn: str, s3_bucket_name: str, region_name: str):
+def create_userdata(
+    activity_arn: str, s3_bucket_name: str, region_name: str
+) -> str:
     """Creates the script to run at the start of each instance worker,
     passed to the ec2 instance launch user-data parameter.
 

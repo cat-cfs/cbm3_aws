@@ -59,7 +59,7 @@ def get_local_dir() -> str:
     return os.path.dirname(os.path.realpath(__file__))
 
 
-def get_userdata(bucket_name, base64_encode=False):
+def get_userdata(bucket_name: str, base64_encode=False):
     """Returns a string, optionally base64 encoded to be run in the user-data
     field of an EC2 instance in order to prepare the OS for running CBM3 and a
     cbm3_aws worker script

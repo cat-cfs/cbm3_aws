@@ -3,6 +3,7 @@ import json
 import time
 import tempfile
 import traceback
+from typing import Callable
 import logging
 from threading import Thread
 from threading import Event
@@ -13,30 +14,37 @@ from botocore.client import Config
 from cbm3_aws.instance import instance_cbm3_task
 from cbm3_aws.s3_interface import S3Interface
 from cbm3_aws.s3_io import S3IO
+from mypy_boto3_stepfunctions.type_defs import GetActivityTaskOutputTypeDef
 
 
 class HeartBeatThread(Thread):
-    def __init__(self, event, interval, target_func):
+    def __init__(self, event: Event, interval: int, target_func: Callable):
         Thread.__init__(self)
         self.stopped = event
         self.interval = interval
         self.target_func = target_func
 
-    def run(self):
+    def run(self) -> None:
         while not self.stopped.wait(self.interval):
             self.target_func()
 
 
-def __valid_token(get_activity_task_response):
+def _valid_token(
+    get_activity_task_response: GetActivityTaskOutputTypeDef,
+) -> bool:
     return (
         "taskToken" in get_activity_task_response
-        and get_activity_task_response["taskToken"]
+        and len(get_activity_task_response["taskToken"]) > 0
     )
 
 
 def run(
-    process_index, activity_arn, s3_bucket_name, region_name, max_concurrency
-):
+    process_index: int,
+    activity_arn: str,
+    s3_bucket_name: str,
+    region_name: str,
+    max_concurrency: int,
+) -> None:
     """Run a worker persistently on a single thread.
 
     The worker will call get_activity_task repeatedly with delayed retries
@@ -51,10 +59,11 @@ def run(
             ]
 
     Args:
-        activity_arn (string): the resource name for the activity task to poll
-        s3_bucket_name (string): the name of the s3 bucket to get input data
+        process_index (int): uniquely identifies the process for logging
+        activity_arn (str): the resource name for the activity task to poll
+        s3_bucket_name (str): the name of the s3 bucket to get input data
             from and to upload results to
-        region_name (string): AWS region name
+        region_name (str): AWS region name
         max_concurrency (int): the maximum number of sub processes this
             process will spawn
     """
@@ -87,12 +96,12 @@ def run(
             )
 
             retry_interval = 30
-            if not __valid_token(get_activity_task_response):
+            if not _valid_token(get_activity_task_response):
                 time.sleep(retry_interval)
                 logger.info("no activity task, retrying")
                 # If there is a null task token it means there is no task
                 # available. Sleep the worker and try again
-                while not __valid_token(get_activity_task_response):
+                while not _valid_token(get_activity_task_response):
                     get_activity_task_response = client.get_activity_task(
                         activityArn=activity_arn
                     )
@@ -127,8 +136,8 @@ def get_heart_beat_func(client, task_token, logger):
 def process_task(
     client, task_token, task_input, s3_bucket_name, logger, max_concurrency
 ):
+    heart_beat_stop_flag = Event()
     try:
-        heart_beat_stop_flag = Event()
         heart_beat_thread = HeartBeatThread(
             heart_beat_stop_flag,
             25,

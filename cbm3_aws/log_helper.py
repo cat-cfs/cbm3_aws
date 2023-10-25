@@ -2,7 +2,7 @@ import datetime
 import logging
 
 
-def start_logging(name: str, level: str):
+def start_logging(name: str, level: str) -> None:
     rootLogger = logging.getLogger()
 
     logFormatter = logging.Formatter(
@@ -24,5 +24,5 @@ def start_logging(name: str, level: str):
     rootLogger.setLevel(level)
 
 
-def get_logger(name: str):
+def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(f"cbm3_aws.{name}")

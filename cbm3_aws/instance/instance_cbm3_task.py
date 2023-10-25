@@ -11,7 +11,7 @@ def run_tasks(
     s3_io: S3IO,
     logger: Logger,
     max_concurrency: int,
-):
+) -> None:
     """Runs a CBM3 project simulation task
 
         :: Example simulation_tasks

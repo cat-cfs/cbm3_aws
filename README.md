@@ -52,8 +52,8 @@ Example resources file
     },
     "region_name": "ca-central-1",
     "s3_bucket_name": "my-cbm3-aws-bucket",
-    "min_instances": 1,
-    "max_instances": 1,
+    "min_virtual_cpu": 1,
+    "max_virtual_cpu": 1,
     "image_ami_id": "ami-0c2f25c1f66a1ff4d",
     "instance_type": "t2.micro",
     "s3_bucket_policy_context": {
@@ -96,3 +96,5 @@ del .\cbm3_aws_resources.json
 ```
 
 **Note: This does not remove the s3 bucket named in the  `cbm3_aws_deploy` and this must be done as a separate step.**
+
+## Start an execution on a running cluster

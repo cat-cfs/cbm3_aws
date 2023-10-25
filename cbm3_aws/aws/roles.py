@@ -183,6 +183,8 @@ def create_ec2_worker_policy(
         "IAM instance role",
     )
 
+    if "Arn" not in create_policy_response["Policy"]:
+        raise ValueError("Arn not found in create_policy_response")
     return dict(policy_arn=create_policy_response["Policy"]["Arn"])
 
 

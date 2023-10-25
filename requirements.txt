@@ -1,5 +1,10 @@
 boto3
 boto3-stubs
+boto3-stubs[autoscaling]
+boto3-stubs[ec2]
+boto3-stubs[s3]
+boto3-stubs[sts]
+boto3-stubs[iam]
 watchtower
 ec2-metadata
 shortuuid

@@ -1,4 +1,5 @@
 import os
+import shutil
 from logging import Logger
 from typing import Iterator
 from cbm3_aws.s3_io import S3IO
@@ -155,6 +156,11 @@ def run_tasks(
             project_code=task["project_code"],
             simulation_id=task["simulation_id"],
         )
+
+        # now clean up the rest of the files for the task
+        shutil.rmtree(task["tempfiles_output_dir"], ignore_errors=True)
+        os.unlink(task["stdout_path"])
+
     logger.info("CBM3 tasks finished")
 
 

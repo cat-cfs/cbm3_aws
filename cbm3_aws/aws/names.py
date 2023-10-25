@@ -5,7 +5,7 @@ def get_uuid() -> str:
     return shortuuid.uuid()
 
 
-def get_names(uuid) -> dict[str, str]:
+def get_names(uuid: str) -> dict[str, str]:
     return dict(
         run_activity=f"cbm3_run_activity_{uuid}",
         autoscale_launch_template=f"cbm3_run_launch_template_{uuid}",
@@ -19,7 +19,7 @@ def get_names(uuid) -> dict[str, str]:
     )
 
 
-def get_step_functions_executions_name(uuid) -> dict[str, str]:
+def get_step_functions_executions_name(uuid: str) -> dict[str, str]:
     return dict(
         step_functions_execution=f"cbm3_aws_step_functions_execution_{uuid}"
     )

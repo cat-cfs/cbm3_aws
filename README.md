@@ -7,7 +7,10 @@ Scripts and commands for deploying and running CBM3 simulations on AWS
 * The [CBM-CFS3 toolbox](https://www.nrcan.gc.ca/climate-change/impacts-adaptations/climate-change-impacts-forests/carbon-accounting/carbon-budget-model/13107)
 * The Windows operating system
 * python 3x
+* git
 * python packages (see requirements.txt)
+
+
 
 ## Installing
 
@@ -25,8 +28,8 @@ Deploy a cbm3_aws cluster from the windows command line
 cbm3_aws_deploy ^
     --region_name ca-central-1 ^
     --s3_bucket_name my-cbm3-aws-bucket ^
-    --min_instances 1 ^
-    --max_instances 1 ^
+    --min_virtual_cpu 1 ^
+    --max_virtual_cpu 1 ^
     --image_ami_id ami-0c2f25c1f66a1ff4d ^
     --instance_type t2.micro ^
     --resource_description_path .\cbm3_aws_resources.json
@@ -78,8 +81,6 @@ Example resources file
     "user_data": "<script><app_run_command></script>"
 }
 ```
-
-
 
 ## Clean up the cluster
 

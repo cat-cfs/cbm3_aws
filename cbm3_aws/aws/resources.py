@@ -10,6 +10,7 @@ from cbm3_aws.aws import roles
 from cbm3_aws.aws import step_functions
 from cbm3_aws.aws import autoscale_group
 from cbm3_aws.aws import s3_bucket
+from mypy_boto3_s3.literals import BucketLocationConstraintType
 from cbm3_aws.aws.names import get_names
 from cbm3_aws.aws.names import get_uuid
 from cbm3_aws import log_helper
@@ -98,7 +99,7 @@ def cleanup(resource_description: dict):
 
 
 def deploy(
-    region_name: str,
+    region_name: BucketLocationConstraintType,
     s3_bucket_name: str,
     min_virtual_cpu: int,
     max_virtual_cpu: int,
@@ -230,20 +231,33 @@ def deploy(
     except ClientError as err:
         # from:
         # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/error-handling.html
-        if err.response["Error"]["Code"] == "InternalError":  # Generic error
-            logger.error(
-                "Error Message: {}".format(err.response["Error"]["Message"])
-            )
-            logger.error(
-                "Request ID: {}".format(
-                    err.response["ResponseMetadata"]["RequestId"]
+
+        if (
+            "Error" in err.response
+            and "Code" in err.response["Error"]
+            and "Message" in err.response["Error"]
+            and "ResponseMetadata" in err.response
+        ):
+            if (
+                err.response["Error"]["Code"] == "InternalError"
+            ):  # Generic error
+                logger.error(
+                    "Error Message: {}".format(
+                        err.response["Error"]["Message"]
+                    )
                 )
-            )
-            logger.error(
-                "Http code: {}".format(
-                    err.response["ResponseMetadata"]["HTTPStatusCode"]
+                logger.error(
+                    "Request ID: {}".format(
+                        err.response["ResponseMetadata"]["RequestId"]
+                    )
                 )
-            )
+                logger.error(
+                    "Http code: {}".format(
+                        err.response["ResponseMetadata"]["HTTPStatusCode"]
+                    )
+                )
+            else:
+                raise err
         else:
             raise err
     finally:

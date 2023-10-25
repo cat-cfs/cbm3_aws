@@ -6,7 +6,7 @@ Expand-Archive -LiteralPath ~\instance_software.zip -DestinationPath ~\software
 #enable .net2.0/3.5
 DISM /Online /Enable-Feature:NetFx3 /All
 
-#install python to c:\python38
+#install python 
 Start-Process -FilePath ~\software\python-3.11.6-amd64.exe -ArgumentList "/quiet TargetDir=c:\python311 InstallAllUsers=1 PrependPath=1 Include_test=0" -NoNewWindow -Wait
 #set python paths for the process
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\python311")

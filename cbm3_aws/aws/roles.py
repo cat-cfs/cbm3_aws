@@ -279,7 +279,7 @@ def create_instance_iam_role(
     for policy_context in policy_context_list:
         client.attach_role_policy(
             RoleName=names["instance_iam_role"],
-            PolicyArn=policy_context.policy_arn,
+            PolicyArn=policy_context["policy_arn"],
         )
 
     create_instance_profile_response = client.create_instance_profile(

@@ -169,19 +169,13 @@ def create_autoscaling_group(
                     ]
                 },
                 "Overrides": [
-                    {"InstanceType": "m5.2xlarge", "WeightedCapacity": "8"},
-                    {"InstanceType": "m5.4xlarge", "WeightedCapacity": "16"},
-                    {"InstanceType": "m5.8xlarge", "WeightedCapacity": "32"},
-                    {"InstanceType": "m5a.2xlarge", "WeightedCapacity": "8"},
-                    {"InstanceType": "m5a.4xlarge", "WeightedCapacity": "16"},
-                    {"InstanceType": "m5a.8xlarge", "WeightedCapacity": "32"},
-                    {"InstanceType": "m4.2xlarge", "WeightedCapacity": "8"},
-                    {"InstanceType": "m4.4xlarge", "WeightedCapacity": "16"},
-                    {"InstanceType": "m4.10xlarge", "WeightedCapacity": "40"},
-                    {"InstanceType": "c5.2xlarge", "WeightedCapacity": "8"},
-                    {"InstanceType": "c5.4xlarge", "WeightedCapacity": "16"},
-                    {"InstanceType": "c4.2xlarge", "WeightedCapacity": "8"},
-                    {"InstanceType": "c4.4xlarge", "WeightedCapacity": "16"},
+                    {
+                        "InstanceRequirements": {
+                            "VCpuCount": {"Min": 8, "Max": 8},
+                            "CpuManufacturers": ["intel"],
+                        },
+                        "WeightedCapacity": 8
+                    },
                 ],
             },
             "InstancesDistribution": {
@@ -192,7 +186,7 @@ def create_autoscaling_group(
                 "OnDemandBaseCapacity": 0,
                 # percent of on demand versus spot instances
                 "OnDemandPercentageAboveBaseCapacity": 0,
-                "SpotAllocationStrategy": "capacity-optimized",
+                "SpotAllocationStrategy": "price-capacity-optimized",
             },
         },
         MinSize=min_size,

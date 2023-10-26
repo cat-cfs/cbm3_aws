@@ -222,8 +222,8 @@ def deploy(
             client=auto_scale_client,
             name=rd["names"]["autoscale_group"],
             launch_template_context=rd["launch_template_context"],
-            min_size=rd["min_virtual_cpu"],
-            max_size=rd["max_virtual_cpu"],
+            min_size=rd["min_virtual_cpu"]//8,
+            max_size=rd["max_virtual_cpu"]//8,
             availability_zones=availability_zones,
             vpc_zone_identifier=vpc_zone_identifier,
         )

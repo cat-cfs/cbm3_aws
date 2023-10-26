@@ -172,16 +172,16 @@ def create_autoscaling_group(
                     {
                         "InstanceRequirements": {
                             "VCpuCount": {"Min": 8, "Max": 8},
+                            "MemoryMiB": {"Min": 16000, "Max": 33000},
                             "CpuManufacturers": ["intel"],
                         },
-                        "WeightedCapacity": 8,
                     },
                 ],
             },
             "InstancesDistribution": {
                 # prioritized by the order of the above overrides list
                 # for on-demand only
-                "OnDemandAllocationStrategy": "prioritized",
+                "OnDemandAllocationStrategy": "lowest-price",
                 # minimum number of On demand instances
                 "OnDemandBaseCapacity": 0,
                 # percent of on demand versus spot instances

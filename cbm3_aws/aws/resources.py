@@ -51,13 +51,13 @@ def cleanup(resource_description: dict) -> None:
     rd = resource_description
 
     logger.info("connecting")
-    ec2_client = boto3.client("ec2", region_name=rd["region_name"])
+    ec2_client = boto3.client("ec2", region_name=rd["region_name"], verify=False)
 
     auto_scale_client = boto3.client(
-        "autoscaling", region_name=rd["region_name"]
+        "autoscaling", region_name=rd["region_name"], verify=False
     )
-    iam_client = boto3.client("iam", region_name=rd["region_name"])
-    sfn_client = boto3.client("stepfunctions", region_name=rd["region_name"])
+    iam_client = boto3.client("iam", region_name=rd["region_name"], verify=False)
+    sfn_client = boto3.client("stepfunctions", region_name=rd["region_name"], verify=False)
 
     if "autoscale_group_context" in rd:
         logger.info("drop autoscale group")
@@ -128,14 +128,14 @@ def deploy(
 
     try:
         logger.info("connecting")
-        s3_client = boto3.client("s3", region_name=region_name)
-        ec2_client = boto3.client("ec2", region_name=region_name)
+        s3_client = boto3.client("s3", region_name=region_name, verify=False)
+        ec2_client = boto3.client("ec2", region_name=region_name, verify=False)
         auto_scale_client = boto3.client(
-            "autoscaling", region_name=region_name
+            "autoscaling", region_name=region_name, verify=False
         )
-        iam_client = boto3.client("iam", region_name=region_name)
-        sts_client = boto3.client("sts", region_name=region_name)
-        sfn_client = boto3.client("stepfunctions", region_name=region_name)
+        iam_client = boto3.client("iam", region_name=region_name, verify=False)
+        sts_client = boto3.client("sts", region_name=region_name, verify=False)
+        sfn_client = boto3.client("stepfunctions", region_name=region_name, verify=False)
 
         logger.info("check if bucket exists")
         if not _s3_bucket_exists(s3_client, s3_bucket_name):

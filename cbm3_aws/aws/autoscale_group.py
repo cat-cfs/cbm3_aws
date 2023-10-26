@@ -174,7 +174,7 @@ def create_autoscaling_group(
                             "VCpuCount": {"Min": 8, "Max": 8},
                             "CpuManufacturers": ["intel"],
                         },
-                        "WeightedCapacity": 8
+                        "WeightedCapacity": 8,
                     },
                 ],
             },

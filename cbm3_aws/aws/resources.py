@@ -51,13 +51,19 @@ def cleanup(resource_description: dict) -> None:
     rd = resource_description
 
     logger.info("connecting")
-    ec2_client = boto3.client("ec2", region_name=rd["region_name"], verify=False)
+    ec2_client = boto3.client(
+        "ec2", region_name=rd["region_name"], verify=False
+    )
 
     auto_scale_client = boto3.client(
         "autoscaling", region_name=rd["region_name"], verify=False
     )
-    iam_client = boto3.client("iam", region_name=rd["region_name"], verify=False)
-    sfn_client = boto3.client("stepfunctions", region_name=rd["region_name"], verify=False)
+    iam_client = boto3.client(
+        "iam", region_name=rd["region_name"], verify=False
+    )
+    sfn_client = boto3.client(
+        "stepfunctions", region_name=rd["region_name"], verify=False
+    )
 
     if "autoscale_group_context" in rd:
         logger.info("drop autoscale group")
@@ -135,7 +141,9 @@ def deploy(
         )
         iam_client = boto3.client("iam", region_name=region_name, verify=False)
         sts_client = boto3.client("sts", region_name=region_name, verify=False)
-        sfn_client = boto3.client("stepfunctions", region_name=region_name, verify=False)
+        sfn_client = boto3.client(
+            "stepfunctions", region_name=region_name, verify=False
+        )
 
         logger.info("check if bucket exists")
         if not _s3_bucket_exists(s3_client, s3_bucket_name):
@@ -222,8 +230,8 @@ def deploy(
             client=auto_scale_client,
             name=rd["names"]["autoscale_group"],
             launch_template_context=rd["launch_template_context"],
-            min_size=rd["min_virtual_cpu"]//8,
-            max_size=rd["max_virtual_cpu"]//8,
+            min_size=rd["min_virtual_cpu"] // 8,
+            max_size=rd["max_virtual_cpu"] // 8,
             availability_zones=availability_zones,
             vpc_zone_identifier=vpc_zone_identifier,
         )

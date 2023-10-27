@@ -20,8 +20,8 @@ def create_userdata(
 
     commands = [
         "<powershell>",
-        "pip install git+https://github.com/cat-cfs/cbm3_python",
-        "pip install git+https://github.com/cat-cfs/cbm3_aws",
+        # "pip install git+https://github.com/cat-cfs/cbm3_python",
+        # "pip install git+https://github.com/cat-cfs/cbm3_aws",
         instance_run_script_command,
         "</powershell>",
     ]

@@ -14,7 +14,7 @@ Start-Process -FilePath ~\software\python-3.11.6-amd64.exe -ArgumentList "/quiet
 #helps with installing other package wheels
 pip install wheel
 
-Start-Process -FilePath ~\software\Git-2.42.0.2-64-bit.exe -ArgumentList "/SILENT /DIR='c:\git'" -NoNewWindow -Wait
+Start-Process -FilePath ~\software\Git-2.42.0.2-64-bit.exe -ArgumentList "/SILENT /DIR=c:\git" -NoNewWindow -Wait
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;c:\git\cmd")
 
 #install access database engine

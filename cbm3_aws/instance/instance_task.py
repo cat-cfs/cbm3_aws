@@ -70,12 +70,11 @@ def run(
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("cbm3_aws.instance.instance_task")
-    boto3_session = boto3.session.Session(region_name=region_name)
     instance_id = ec2_metadata.instance_id
     cloud_watch_log_handler = watchtower.CloudWatchLogHandler(
         log_group="cbm3_aws",
         stream_name=f"{instance_id}/process{process_index}",
-        boto3_session=boto3_session,
+        boto3_client=boto3.client("logs", region_name=region_name),
     )
     logger.addHandler(cloud_watch_log_handler)
 

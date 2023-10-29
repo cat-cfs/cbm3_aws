@@ -1,4 +1,5 @@
 import psutil
+import math
 import subprocess
 from argparse import ArgumentParser
 from cbm3_aws import log_helper
@@ -30,7 +31,11 @@ def main():
         # *IMPORTANT* need to use instances with at least 8 threads
         # and also multiples of 8 threads
         # see: cbm3_aws.aws.autoscale_group
-        num_workers = psutil.cpu_count() // 8
+        cpu_count = psutil.cpu_count()
+        if cpu_count:
+            num_workers = math.ceil(psutil.cpu_count() / 8)
+        else:
+            num_workers = 1
         for i in range(num_workers):
             popen_args = [
                 "cbm3_aws_instance_process",

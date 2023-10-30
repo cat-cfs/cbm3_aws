@@ -40,7 +40,7 @@ def upload(
         s3_io = S3IO(
             execution_s3_key_prefix=execution_s3_key_prefix,
             s3_interface=S3Interface(
-                s3_resource=boto3.resource("s3"),
+                s3_resource=boto3.resource("s3", verify=False),
                 bucket_name=s3_bucket_name,
                 local_temp_dir=temp_dir,
             ),

@@ -210,7 +210,9 @@ def create_autoscaling_group(
                             "VCpuCount": {"Min": 8, "Max": 8},
                             "MemoryMiB": {"Min": 10000, "Max": 33000},
                             "CpuManufacturers": ["intel"],
-                            "ExcludedInstanceTypes": AWS_NON_WINDOWS_SUPPORTING_INSTANCE_TYPES
+                            "ExcludedInstanceTypes": (
+                                AWS_NON_WINDOWS_SUPPORTING_INSTANCE_TYPES
+                            )
                         },
                     },
                 ],

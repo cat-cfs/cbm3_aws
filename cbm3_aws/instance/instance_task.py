@@ -125,11 +125,10 @@ def run(
 
 
 def get_heart_beat_func(client, task_token, logger):
-    def hear_beat():
-        logger.info("heartbeat")
+    def heart_beat():
         client.send_task_heartbeat(taskToken=task_token)
 
-    return hear_beat
+    return heart_beat
 
 
 def process_task(
@@ -167,7 +166,7 @@ def process_task(
                 logger=logger,
                 max_concurrency=max_concurrency,
             )
-
+        logger.info("send task success to state machine")
         client.send_task_success(
             taskToken=task_token,
             output=json.dumps(
@@ -182,13 +181,16 @@ def process_task(
     except Exception:
         # need to send task_success here to avoid interrupting the entire
         # state machine
+
+        exception_string = traceback.format_exc()
+        logger.info(exception_string)
         client.send_task_success(
             taskToken=task_token,
             output=json.dumps(
                 {
                     "output": {
                         "simulations": task_input["simulations"],
-                        "errors": traceback.format_exc(),
+                        "errors": exception_string,
                     }
                 }
             ),

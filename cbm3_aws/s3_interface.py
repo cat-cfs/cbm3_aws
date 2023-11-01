@@ -1,33 +1,44 @@
 import os
 import zipfile
 from cbm3_aws import log_helper
+from mypy_boto3_s3.service_resource import S3ServiceResource
+from boto3.s3.transfer import TransferConfig
 
 logger = log_helper.get_logger(__name__)
 
 
 class S3Interface(object):
-    def __init__(self, s3_resource, bucket_name, local_temp_dir):
+    def __init__(
+        self,
+        s3_resource: S3ServiceResource,
+        bucket_name: str,
+        local_temp_dir: str,
+    ):
         self.bucket_name = bucket_name
         self.bucket = s3_resource.Bucket(bucket_name)
         self.local_temp_dir = local_temp_dir
         self.__format = "zip"
         self.__singleFileFlag = "__is__single__file_archive__"
 
-    def download_file(self, keyName, localPath):
+    def download_file(self, keyName, localPath) -> None:
         logger.info(
             "downloading file from S3 '{0}' to '{1}'".format(
                 keyName, localPath
             )
         )
-        self.bucket.download_file(keyName, localPath)
+        self.bucket.download_file(
+            keyName, localPath, Config=TransferConfig(num_download_attempts=10)
+        )
 
-    def upload_file(self, localPath, keyName):
+    def upload_file(self, localPath: str, keyName: str) -> None:
         logger.info(
             "uploading file '{0}' to S3 '{1}'".format(localPath, keyName)
         )
-        self.bucket.upload_file(localPath, keyName)
+        self.bucket.upload_file(
+            localPath, keyName, Config=TransferConfig(num_download_attempts=10)
+        )
 
-    def make_zipfile(self, output_filename, source_dir):
+    def make_zipfile(self, output_filename, source_dir) -> None:
         """
         mostly borrowed from an answer on Stack overflow
         https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory
@@ -47,7 +58,9 @@ class S3Interface(object):
                         )
                         zip.write(filename, arcname)
 
-    def archive_file_or_directory(self, pathToArchive, archiveName):
+    def archive_file_or_directory(
+        self, pathToArchive: str, archiveName: str
+    ) -> str:
         if os.path.isdir(pathToArchive):
             archivePath = os.path.join(self.local_temp_dir, archiveName)
             logger.debug(
@@ -82,12 +95,13 @@ class S3Interface(object):
             return outputPath
         else:
             raise ValueError(
-                "specified pathToArchive '{0}' is neither a dir or a file path".format(
-                    pathToArchive
-                )
+                f"specified pathToArchive '{pathToArchive}' "
+                "is neither a dir or a file path"
             )
 
-    def unpack_file_or_directory(self, archive_name, destination_path):
+    def unpack_file_or_directory(
+        self, archive_name: str, destination_path: str
+    ) -> None:
         logger.debug(
             "upacking files in '{0}' to '{1}'".format(
                 archive_name, destination_path
@@ -116,7 +130,9 @@ class S3Interface(object):
             else:
                 z.extractall(destination_path)
 
-    def upload_compressed(self, key_name_prefix, document_name, local_path):
+    def upload_compressed(
+        self, key_name_prefix: str, document_name: str, local_path: str
+    ) -> None:
         fn = self.archive_file_or_directory(local_path, document_name)
         # archive directory may add a file extension
         ext = os.path.splitext(fn)[1]
@@ -125,7 +141,9 @@ class S3Interface(object):
         self.upload_file(fn, s3_key)
         os.remove(fn)
 
-    def download_compressed(self, key_name_prefix, document_name, local_path):
+    def download_compressed(
+        self, key_name_prefix: str, document_name: str, local_path: str
+    ) -> None:
         document_name = "{0}.{1}".format(document_name, self.__format)
         archiveName = os.path.join(
             self.local_temp_dir, document_name.replace("/", "_")

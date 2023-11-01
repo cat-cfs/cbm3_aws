@@ -1,16 +1,25 @@
+from cbm3_aws.s3_interface import S3Interface
+
+
 class S3IO:
-    def __init__(self, execution_s3_key_prefix, s3_interface):
+    def __init__(
+        self, execution_s3_key_prefix: str, s3_interface: S3Interface
+    ):
         self.s3_interface = s3_interface
         self.execution_s3_key_prefix = execution_s3_key_prefix
         self._register_methods()
 
-    def _create_key_name_prefix(self, key_token):
+    def _create_key_name_prefix(self, key_token) -> str:
         return "/".join(["cbm3_aws", self.execution_s3_key_prefix, key_token])
 
-    def _register_methods(self):
+    def _register_methods(self) -> None:
         self.doc_name_methods = {
-            "results": lambda **kwargs: f'{kwargs["project_code"]}_{kwargs["simulation_id"]}',
-            "tempfiles": lambda **kwargs: f'{kwargs["project_code"]}_{kwargs["simulation_id"]}',
+            "results": lambda **kwargs: (
+                f'{kwargs["project_code"]}_{kwargs["simulation_id"]}'
+            ),
+            "tempfiles": lambda **kwargs: (
+                f'{kwargs["project_code"]}_{kwargs["simulation_id"]}'
+            ),
             "project": lambda **kwargs: f'{kwargs["project_code"]}',
             "resource": lambda **kwargs: f'{kwargs["resource_name"]}',
         }

@@ -113,6 +113,8 @@ class S3Interface(object):
                 # it's a single file archive, so the destination path is
                 # assumed to be the full path to the filename
                 destinationDir = os.path.dirname(destination_path)
+                if not os.path.exists(destinationDir):
+                    os.makedirs(destinationDir)
                 destinationFileName = os.path.basename(destination_path)
                 compressedFileName = [
                     x for x in files if x != self._singleFileFlag
@@ -121,10 +123,12 @@ class S3Interface(object):
                     z.extractall(extraction_dir)
                     shutil.copyfile(
                         src=os.path.join(extraction_dir, compressedFileName),
-                        dst=os.path.join(destinationDir, destinationFileName)
+                        dst=os.path.join(destinationDir, destinationFileName),
                     )
-                
+
             else:
+                if not os.path.exists(destination_path):
+                    os.makedirs(destination_path)
                 z.extractall(destination_path)
 
     def upload_compressed(

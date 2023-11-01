@@ -27,16 +27,16 @@ AWS_NON_WINDOWS_SUPPORTING_INSTANCE_TYPES = [
     "inf*.*",
     "is4gen.*",
     "m6g*.*",
-    "m7g*.*"
+    "m7g*.*",
     "mac*.*",
     "p4d.24xlarge",
     "p5.48xlarge",
     "r6g*.*",
     "r7g*.*",
-    "t4g*.*"
+    "t4g*.*",
     "trn1*.*",
     "vt1.*",
-    "x2gd.*"
+    "x2gd.*",
 ]
 
 
@@ -212,7 +212,7 @@ def create_autoscaling_group(
                             "CpuManufacturers": ["intel"],
                             "ExcludedInstanceTypes": (
                                 AWS_NON_WINDOWS_SUPPORTING_INSTANCE_TYPES
-                            )
+                            ),
                         },
                     },
                 ],

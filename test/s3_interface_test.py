@@ -34,15 +34,14 @@ class S3Interface_Test(unittest.TestCase):
     def test_constructor_creates_bucket_and_assigns_tempdir(self):
         m = MockS3Resource()
         m.bind_bucket_method(lambda name: MockS3Bucket(name))
-        s = S3Interface(m, "b", os.path.join(os.getcwd(), "temp"))
+        s = S3Interface(m, "b")
         self.assertIsInstance(s.bucket, MockS3Bucket)
         self.assertEqual(s.bucket.name, "b")
-        self.assertEqual(s.local_temp_dir, os.path.join(os.getcwd(), "temp"))
 
     def test_downloadFileCallsBucketMethod(self):
         m = MockS3Resource()
         m.bind_bucket_method(lambda name: MockS3Bucket(name))
-        s = S3Interface(m, "b", os.path.join(os.getcwd(), "temp"))
+        s = S3Interface(m, "b")
 
         def func(keyName, localPath):
             self.assertEqual(localPath, "path")
@@ -54,7 +53,7 @@ class S3Interface_Test(unittest.TestCase):
     def test_uploadFileCallsBucketMethod(self):
         m = MockS3Resource()
         m.bind_bucket_method(lambda name: MockS3Bucket(name))
-        s = S3Interface(m, "b", os.path.join(os.getcwd(), "temp"))
+        s = S3Interface(m, "b")
 
         def func(localPath, keyName):
             self.assertEqual(localPath, "path")

@@ -1,5 +1,7 @@
 import os
+import shutil
 import zipfile
+from tempfile import TemporaryDirectory
 from cbm3_aws import log_helper
 from mypy_boto3_s3.service_resource import S3ServiceResource
 from boto3.s3.transfer import TransferConfig
@@ -12,13 +14,11 @@ class S3Interface(object):
         self,
         s3_resource: S3ServiceResource,
         bucket_name: str,
-        local_temp_dir: str,
     ):
         self.bucket_name = bucket_name
         self.bucket = s3_resource.Bucket(bucket_name)
-        self.local_temp_dir = local_temp_dir
-        self.__format = "zip"
-        self.__singleFileFlag = "__is__single__file_archive__"
+        self._format = "zip"
+        self._singleFileFlag = "__is__single__file_archive__"
 
     def download_file(self, keyName, localPath) -> None:
         logger.info(
@@ -59,10 +59,10 @@ class S3Interface(object):
                         zip.write(filename, arcname)
 
     def archive_file_or_directory(
-        self, pathToArchive: str, archiveName: str
+        self, pathToArchive: str, archiveName: str, temp_dir: str
     ) -> str:
         if os.path.isdir(pathToArchive):
-            archivePath = os.path.join(self.local_temp_dir, archiveName)
+            archivePath = os.path.join(temp_dir, archiveName)
             logger.debug(
                 "archiving documents at '{0}' to '{1}'".format(
                     pathToArchive, archivePath
@@ -73,9 +73,7 @@ class S3Interface(object):
             return outputPath
         elif os.path.isfile(pathToArchive):
             outputPath = (
-                os.path.join(self.local_temp_dir, archiveName)
-                + "."
-                + self.__format
+                os.path.join(temp_dir, archiveName) + "." + self._format
             )
             logger.debug(
                 "archiving file '{0}' to '{1}'".format(
@@ -86,11 +84,9 @@ class S3Interface(object):
                 outputPath, "w", zipfile.ZIP_DEFLATED, True
             ) as z:
                 z.write(pathToArchive, os.path.basename(pathToArchive))
-                singleFilePath = os.path.join(
-                    self.local_temp_dir, self.__singleFileFlag
-                )
+                singleFilePath = os.path.join(temp_dir, self._singleFileFlag)
                 with open(singleFilePath, mode="w"):
-                    z.write(singleFilePath, self.__singleFileFlag)
+                    z.write(singleFilePath, self._singleFileFlag)
                 os.remove(singleFilePath)
             return outputPath
         else:
@@ -109,7 +105,7 @@ class S3Interface(object):
         )
         with zipfile.ZipFile(archive_name, "r", allowZip64=True) as z:
             files = z.namelist()
-            if self.__singleFileFlag in files:
+            if self._singleFileFlag in files:
                 if len(files) != 2:
                     raise ValueError(
                         "single file archive expected to have a single file"
@@ -119,39 +115,44 @@ class S3Interface(object):
                 destinationDir = os.path.dirname(destination_path)
                 destinationFileName = os.path.basename(destination_path)
                 compressedFileName = [
-                    x for x in files if x != self.__singleFileFlag
+                    x for x in files if x != self._singleFileFlag
                 ][0]
-                z.extractall(destinationDir)
-                os.rename(
-                    os.path.join(destinationDir, compressedFileName),
-                    os.path.join(destinationDir, destinationFileName),
-                )
-                os.remove(os.path.join(destinationDir, self.__singleFileFlag))
+                with TemporaryDirectory() as extraction_dir:
+                    z.extractall(extraction_dir)
+                    shutil.copyfile(
+                        src=os.path.join(extraction_dir, compressedFileName),
+                        dst=os.path.join(destinationDir, destinationFileName)
+                    )
+                
             else:
                 z.extractall(destination_path)
 
     def upload_compressed(
         self, key_name_prefix: str, document_name: str, local_path: str
     ) -> None:
-        fn = self.archive_file_or_directory(local_path, document_name)
-        # archive directory may add a file extension
-        ext = os.path.splitext(fn)[1]
-        document_name = document_name + ext
-        s3_key = "/".join([key_name_prefix, document_name])
-        self.upload_file(fn, s3_key)
-        os.remove(fn)
+        with TemporaryDirectory() as tempdir:
+            fn = self.archive_file_or_directory(
+                local_path, document_name, tempdir
+            )
+            # archive directory may add a file extension
+            ext = os.path.splitext(fn)[1]
+            document_name = document_name + ext
+            s3_key = "/".join([key_name_prefix, document_name])
+            self.upload_file(fn, s3_key)
+            os.remove(fn)
 
     def download_compressed(
         self, key_name_prefix: str, document_name: str, local_path: str
     ) -> None:
-        document_name = "{0}.{1}".format(document_name, self.__format)
-        archiveName = os.path.join(
-            self.local_temp_dir, document_name.replace("/", "_")
-        )
-        # for the above replace: if the documentname itself represents a
-        # nested S3 key, convert it to something that can be written to
-        # file systems for the local temp file
-        s3_key = "/".join([key_name_prefix, document_name])
-        self.download_file(s3_key, archiveName)
-        self.unpack_file_or_directory(archiveName, local_path)
-        os.remove(archiveName)
+        with TemporaryDirectory() as tempdir:
+            document_name = "{0}.{1}".format(document_name, self._format)
+            archiveName = os.path.join(
+                tempdir, document_name.replace("/", "_")
+            )
+            # for the above replace: if the documentname itself represents a
+            # nested S3 key, convert it to something that can be written to
+            # file systems for the local temp file
+            s3_key = "/".join([key_name_prefix, document_name])
+            self.download_file(s3_key, archiveName)
+            self.unpack_file_or_directory(archiveName, local_path)
+            os.remove(archiveName)
